@@ -16,6 +16,14 @@ def home():
 def x_downloader_page():
     return send_file('x-downloader.html')
 
+@app.route('/webp_pdf.html', methods=['GET'])
+def webp_pdf_page():
+    return send_file('webp_pdf.html')
+
+@app.route('/tiktok-downloader.html', methods=['GET'])
+def tiktok_downloader_page():
+    return send_file('tiktok-downloader.html')
+
 @app.route('/api/get_x_video', methods=['POST'])
 def get_x_video():
     data = request.json
