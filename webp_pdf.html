@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to PDF Converter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- SortableJS สำหรับลากวาง -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sortable-ghost { opacity: 0.4; background-color: #f3f4f6; }
+        .sortable-drag { cursor: grabbing !important; }
+        .preview-item { cursor: grab; }
+        .preview-item:active { cursor: grabbing; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- ปุ่มกลับหน้าหลัก -->
+        <a href="index.html" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            กลับหน้าหลัก
+        </a>
+
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">แปลงไฟล์รูปภาพเป็น PDF</h1>
+            <p class="text-gray-600">รองรับไฟล์ JPG, PNG และ WEBP | เรียงลำดับชื่อไฟล์อัตโนมัติ และลากสลับตำแหน่งได้</p>
+        </div>
+
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-md border border-gray-200 mb-8">
+            <div class="flex flex-col md:flex-row gap-6 mb-6">
+                <!-- ส่วนอัปโหลดไฟล์ (เพิ่ม accept ให้รองรับ jpg, png, webp) -->
+                <div class="flex-1">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">1. อัปโหลดไฟล์รูปภาพ (JPG, PNG, WEBP)</label>
+                    <input type="file" id="fileInput" accept="image/webp, image/jpeg, image/png, image/jpg" multiple 
+                        class="block w-full text-sm text-gray-500 
+                        file:mr-4 file:py-2.5 file:px-4 file:rounded-md file:border-0 
+                        file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 
+                        hover:file:bg-indigo-100 border border-gray-300 rounded-md">
+                </div>
+                <!-- ส่วนตั้งชื่อไฟล์ -->
+                <div class="flex-1">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">2. กำหนดชื่อไฟล์ PDF ที่ต้องการบันทึก</label>
+                    <input type="text" id="filenameInput" placeholder="document (ไม่ต้องใส่ .pdf)" 
+                        class="block w-full border border-gray-300 rounded-md py-2.5 px-3 
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+            </div>
+            
+            <div class="text-sm text-gray-700 bg-yellow-50 p-4 rounded-md border border-yellow-200 flex items-start gap-3">
+                <span class="text-xl">💡</span>
+                <p><b>เคล็ดลับ:</b> หลังจากเลือกไฟล์แล้ว คุณสามารถ <b>คลิกค้างที่รูปภาพแล้วลาก (Drag & Drop)</b> เพื่อสลับหน้าได้ ลำดับในไฟล์ PDF จะเรียงตามที่คุณเห็นบนหน้าจอด้านล่างนี้เลยครับ</p>
+            </div>
+        </div>
+
+        <!-- พื้นที่แสดงพรีวิวภาพ (ลากวางได้) -->
+        <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8"></div>
+
+        <!-- ปุ่มสร้าง PDF -->
+        <div class="text-center">
+            <button id="convertBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-lg shadow-lg transition duration-200 hidden w-full md:w-auto text-lg">
+                แปลงเป็นไฟล์ PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const filenameInput = document.getElementById('filenameInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const convertBtn = document.getElementById('convertBtn');
+        let imageFiles = [];
+        let sortableInstance = null;
+
+        // อัลกอริทึม Natural Sort ขั้นสูงสำหรับแยกข้อความกับตัวเลข
+        const naturalSort = (a, b) => {
+            const ax = [], bx = [];
+            a.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
+            b.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });
+            
+            while(ax.length && bx.length) {
+                const an = ax.shift();
+                const bn = bx.shift();
+                const nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+                if(nn) return nn;
+            }
+            return ax.length - bx.length;
+        };
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            // เรียงลำดับไฟล์ด้วย Natural Sort ทันทีที่เลือกไฟล์
+            files.sort((a, b) => naturalSort(a.name, b.name));
+
+            previewContainer.innerHTML = '';
+            imageFiles = [];
+
+            files.forEach((file, index) => {
+                const objectURL = URL.createObjectURL(file);
+                imageFiles.push({ file: file, url: objectURL, name: file.name, id: `img-${Date.now()}-${index}` });
+
+                const div = document.createElement('div');
+                div.className = 'preview-item relative bg-white p-3 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow';
+                div.dataset.id = imageFiles[index].id;
+                
+                div.innerHTML = `
+                    <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-xs font-bold px-2.5 py-1 rounded z-10 index-badge">
+                        ${index + 1}
+                    </div>
+                    <div class="aspect-w-3 aspect-h-4 bg-gray-100 rounded-md overflow-hidden mb-3 border border-gray-100">
+                        <img src="${objectURL}" class="object-contain w-full h-32" alt="${file.name}">
+                    </div>
+                    <p class="text-xs text-center truncate text-gray-600 font-medium" title="${file.name}">${file.name}</p>
+                `;
+                previewContainer.appendChild(div);
+            });
+
+            convertBtn.classList.remove('hidden');
+
+            // เปิดใช้งาน SortableJS (Drag & Drop)
+            if (sortableInstance) sortableInstance.destroy();
+            sortableInstance = new Sortable(previewContainer, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: function () { updateBadges(); }
+            });
+        });
+
+        function updateBadges() {
+            const items = previewContainer.querySelectorAll('.preview-item');
+            items.forEach((item, index) => {
+                item.querySelector('.index-badge').innerText = index + 1;
+            });
+        }
+
+        convertBtn.addEventListener('click', async () => {
+            if (imageFiles.length === 0) return;
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            
+            // อ่านลำดับใหม่ล่าสุดจากหน้าจอ
+            const domItems = previewContainer.querySelectorAll('.preview-item');
+            const sortedImages = [];
+            domItems.forEach(item => {
+                const id = item.dataset.id;
+                const found = imageFiles.find(img => img.id === id);
+                if (found) sortedImages.push(found);
+            });
+
+            convertBtn.innerText = 'กำลังสร้างไฟล์ PDF...';
+            convertBtn.disabled = true;
+            convertBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            for (let i = 0; i < sortedImages.length; i++) {
+                const imgObj = sortedImages[i];
+                if (i > 0) pdf.addPage();
+
+                const img = new Image();
+                img.src = imgObj.url;
+                
+                // ตรวจสอบประเภทไฟล์เพื่อให้ jsPDF ฝังรูปลง PDF ได้ถูกต้อง
+                let imgFormat = imgObj.file.type.split('/')[1].toUpperCase();
+                if (imgFormat === 'JPG') imgFormat = 'JPEG';
+                
+                await new Promise((resolve) => {
+                    img.onload = () => {
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = pdf.internal.pageSize.getHeight();
+                        const imgRatio = img.width / img.height;
+                        const pdfRatio = pdfWidth / pdfHeight;
+
+                        let finalWidth, finalHeight;
+                        if (imgRatio > pdfRatio) {
+                            finalWidth = pdfWidth;
+                            finalHeight = pdfWidth / imgRatio;
+                        } else {
+                            finalHeight = pdfHeight;
+                            finalWidth = pdfHeight * imgRatio;
+                        }
+
+                        const x = (pdfWidth - finalWidth) / 2;
+                        const y = (pdfHeight - finalHeight) / 2;
+
+                        pdf.addImage(img, imgFormat, x, y, finalWidth, finalHeight);
+                        resolve();
+                    };
+                });
+            }
+
+            // จัดการชื่อไฟล์
+            let finalFilename = filenameInput.value.trim();
+            if (finalFilename === '') finalFilename = 'document';
+            if (!finalFilename.toLowerCase().endsWith('.pdf')) {
+                finalFilename += '.pdf';
+            }
+
+            pdf.save(finalFilename);
+
+            convertBtn.innerText = 'แปลงเป็นไฟล์ PDF';
+            convertBtn.disabled = false;
+            convertBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        });
+    </script>
+</body>
+</html>

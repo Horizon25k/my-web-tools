@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- เพิ่ม Meta Tag นี้เพื่อซ่อนที่มา ป้องกันการโดนบล็อกภาพและวิดีโอจาก X -->
+    <meta name="referrer" content="no-referrer">
+    <title>X (Twitter) Video Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-3xl mx-auto">
+        
+        <!-- ปุ่มกลับหน้าหลัก -->
+        <a href="index.html" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            กลับหน้าหลัก
+        </a>
+
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">ดาวน์โหลดคลิป <span class="text-black">X (Twitter)</span></h1>
+            <p class="text-gray-600">วางลิงก์โพสต์เพื่อดาวน์โหลด MP4 (คุณภาพสูงสุดจากระบบ)</p>
+        </div>
+        
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-md border border-gray-200">
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">วางลิงก์โพสต์ X หรือ Twitter ที่นี่</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="x-url-input" 
+                        class="flex-1 rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-gray-800 focus:border-gray-800 p-3.5 border text-gray-700" 
+                        placeholder="เช่น https://x.com/username/status/123456789...">
+                    <button onclick="fetchXVideo()" 
+                        class="bg-black hover:bg-gray-800 text-white px-8 py-3.5 rounded-lg transition-colors font-bold shadow-md">
+                        ดึงข้อมูล
+                    </button>
+                </div>
+            </div>
+
+            <!-- สถานะกำลังโหลด -->
+            <div id="x-loading" class="hidden text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-gray-900 mx-auto"></div>
+                <p class="mt-4 text-gray-600 font-medium">กำลังค้นหาข้อมูล...</p>
+            </div>
+
+            <!-- แสดงผลลัพธ์ -->
+            <div id="x-result" class="hidden mt-8 border-t border-gray-100 pt-8">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/2">
+                        <img id="x-thumbnail" class="w-full rounded-xl shadow-sm border border-gray-200 object-cover aspect-video" src="" alt="Thumbnail">
+                    </div>
+                    <div class="w-full md:w-1/2 flex flex-col">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                            </div>
+                            <h3 id="x-author" class="text-md font-bold text-gray-900 truncate"></h3>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6 flex-1">
+                            <p id="x-text" class="text-gray-700 text-sm line-clamp-4"></p>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">รูปแบบที่สามารถดาวน์โหลดได้:</h4>
+                            <div id="x-download-buttons" class="flex flex-col gap-3">
+                                <!-- ลิงก์ดาวน์โหลดจะถูกเพิ่มที่นี่ -->
+                            </div>
+                            
+                            <!-- หมายเหตุ -->
+                            <p class="mt-3 text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-200">
+                                <b>วิธีโหลด:</b> คลิกปุ่มด้านบน วิดีโอจะเปิดในหน้าใหม่ ให้คลิกขวาที่ตัววิดีโอแล้วเลือก <b>"Save video as..." (บันทึกวิดีโอเป็น...)</b> หรือกดปุ่มลัด <b>Ctrl + S</b>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- แสดงข้อผิดพลาด -->
+            <div id="x-error" class="hidden mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-start gap-3">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                <span id="x-error-text" class="font-medium"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchXVideo() {
+            const urlInput = document.getElementById('x-url-input').value.trim();
+            const errorDiv = document.getElementById('x-error');
+            const errorText = document.getElementById('x-error-text');
+            const resultDiv = document.getElementById('x-result');
+            const loadingDiv = document.getElementById('x-loading');
+
+            errorDiv.classList.add('hidden');
+            resultDiv.classList.add('hidden');
+
+            if (!urlInput) {
+                errorText.textContent = 'กรุณาวางลิงก์ X หรือ Twitter ก่อนครับ';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const match = urlInput.match(/(?:twitter\.com|x\.com)\/(?:#!\/)?(\w+)\/status(?:es)?\/(\d+)/);
+            if (!match) {
+                errorText.textContent = 'ลิงก์ไม่ถูกต้อง กรุณาใช้ลิงก์ที่มาจาก x.com หรือ twitter.com';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const username = match[1];
+            const id = match[2];
+            const apiUrl = `https://api.vxtwitter.com/${username}/status/${id}`;
+
+            loadingDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('ไม่พบข้อมูลโพสต์ (โพสต์อาจถูกลบ หรือบัญชีส่วนตัว)');
+                
+                const data = await response.json();
+                
+                if (!data.media_extended || data.media_extended.length === 0) {
+                    throw new Error('ไม่พบรูปภาพหรือวิดีโอในโพสต์นี้');
+                }
+
+                const videos = data.media_extended.filter(m => m.type === 'video');
+                if (videos.length === 0) {
+                    throw new Error('พบแต่รูปภาพ ไม่มีไฟล์วิดีโอให้ดาวน์โหลดครับ');
+                }
+
+                document.getElementById('x-thumbnail').src = videos[0].thumbnail_url || '';
+                document.getElementById('x-author').textContent = `${data.user_name} (@${data.user_screen_name})`;
+                document.getElementById('x-text').textContent = data.text;
+
+                const btnContainer = document.getElementById('x-download-buttons');
+                btnContainer.innerHTML = '';
+
+                videos.forEach((vid, index) => {
+                    const btn = document.createElement('a');
+                    btn.href = vid.url;
+                    btn.target = '_blank';
+                    // เพิ่ม rel="noreferrer" เพื่อซ่อนที่มา ป้องกัน X บล็อก Error 403
+                    btn.rel = 'noreferrer noopener'; 
+                    btn.className = 'w-full bg-black hover:bg-gray-800 text-white font-bold py-3.5 px-4 rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer';
+                    btn.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg> 
+                                    คลิกเพื่อเปิดวิดีโอ MP4 ${videos.length > 1 ? `(คลิปที่ ${index + 1})` : ''}`;
+                    
+                    btnContainer.appendChild(btn);
+                });
+
+                resultDiv.classList.remove('hidden');
+            } catch (error) {
+                errorText.textContent = error.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล กรุณาลองใหม่อีกครั้ง';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

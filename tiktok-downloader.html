@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Video Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-3xl mx-auto">
+        
+        <!-- ปุ่มกลับหน้าหลัก -->
+        <a href="index.html" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            กลับหน้าหลัก
+        </a>
+
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">ดาวน์โหลดคลิป <span class="text-pink-600">TikTok</span></h1>
+            <p class="text-gray-600">วางลิงก์โพสต์จาก TikTok เพื่อดาวน์โหลด MP4 (ไม่มีลายน้ำ) หรือ MP3</p>
+        </div>
+        
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-md border border-gray-200">
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">วางลิงก์ TikTok ที่นี่ (รองรับทั้ง vt.tiktok.com และ tiktok.com)</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="tk-url-input" 
+                        class="flex-1 rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 p-3.5 border text-gray-700" 
+                        placeholder="เช่น https://vt.tiktok.com/ZSN... หรือ https://www.tiktok.com/@user/video/...">
+                    <button onclick="fetchTikTok()" 
+                        class="bg-black hover:bg-gray-800 text-white px-8 py-3.5 rounded-lg transition-colors font-bold shadow-md">
+                        ดึงข้อมูล
+                    </button>
+                </div>
+            </div>
+
+            <!-- สถานะกำลังโหลด -->
+            <div id="tk-loading" class="hidden text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-pink-600 mx-auto"></div>
+                <p class="mt-4 text-gray-600 font-medium">กำลังค้นหาข้อมูล...</p>
+            </div>
+
+            <!-- แสดงผลลัพธ์ -->
+            <div id="tk-result" class="hidden mt-8 border-t border-gray-100 pt-8">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/2">
+                        <img id="tk-thumbnail" class="w-full rounded-xl shadow-sm border border-gray-200 object-cover" src="" alt="Thumbnail">
+                    </div>
+                    <div class="w-full md:w-1/2 flex flex-col">
+                        <div class="flex items-center gap-2 mb-3">
+                            <img id="tk-avatar" class="w-8 h-8 rounded-full" src="" alt="Avatar">
+                            <h3 id="tk-author" class="text-md font-bold text-gray-900 truncate"></h3>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6 flex-1">
+                            <p id="tk-text" class="text-gray-700 text-sm line-clamp-4"></p>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">เลือกรูปแบบที่ต้องการดาวน์โหลด:</h4>
+                            <div id="tk-download-buttons" class="flex flex-col gap-3">
+                                <!-- ปุ่มดาวน์โหลด MP4 (Normal), MP4 (HD), MP3 จะถูกเพิ่มที่นี่ -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- แสดงข้อผิดพลาด -->
+            <div id="tk-error" class="hidden mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-start gap-3">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                <span id="tk-error-text" class="font-medium"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchTikTok() {
+            const urlInput = document.getElementById('tk-url-input').value.trim();
+            const errorDiv = document.getElementById('tk-error');
+            const errorText = document.getElementById('tk-error-text');
+            const resultDiv = document.getElementById('tk-result');
+            const loadingDiv = document.getElementById('tk-loading');
+
+            errorDiv.classList.add('hidden');
+            resultDiv.classList.add('hidden');
+
+            if (!urlInput) {
+                errorText.textContent = 'กรุณาวางลิงก์ TikTok ก่อนครับ';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            // ใช้ Public API (TikWM) สำหรับดึงข้อมูล TikTok 
+            const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(urlInput)}`;
+
+            loadingDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+                
+                if (json.code !== 0 || !json.data) {
+                    throw new Error(json.msg || 'ไม่พบวิดีโอนี้ หรือวิดีโอถูกตั้งเป็นส่วนตัว');
+                }
+
+                const data = json.data;
+
+                // แสดงข้อมูลบนหน้าเว็บ
+                document.getElementById('tk-thumbnail').src = data.cover || '';
+                document.getElementById('tk-avatar').src = data.author.avatar || '';
+                document.getElementById('tk-author').textContent = `${data.author.nickname} (@${data.author.unique_id})`;
+                document.getElementById('tk-text').textContent = data.title || 'ไม่มีคำอธิบาย';
+
+                const btnContainer = document.getElementById('tk-download-buttons');
+                btnContainer.innerHTML = '';
+
+                // ปุ่มโหลด MP4 (No Watermark)
+                if (data.play) {
+                    btnContainer.appendChild(createDownloadButton('ดาวน์โหลด MP4 (คุณภาพปกติ)', data.play, `TikTok_${data.author.unique_id}.mp4`, 'bg-black hover:bg-gray-800'));
+                }
+
+                // ปุ่มโหลด MP4 (HD) - ถ้ามี
+                if (data.hdplay) {
+                    btnContainer.appendChild(createDownloadButton('ดาวน์โหลด MP4 (คุณภาพ HD)', data.hdplay, `TikTok_HD_${data.author.unique_id}.mp4`, 'bg-pink-600 hover:bg-pink-700'));
+                }
+
+                // ปุ่มโหลดเสียง MP3
+                if (data.music) {
+                    btnContainer.appendChild(createDownloadButton('ดาวน์โหลดไฟล์เสียง (MP3)', data.music, `TikTok_Audio_${data.author.unique_id}.mp3`, 'bg-indigo-600 hover:bg-indigo-700'));
+                }
+
+                resultDiv.classList.remove('hidden');
+            } catch (error) {
+                errorText.textContent = error.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล กรุณาลองใหม่อีกครั้ง';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        }
+
+        function createDownloadButton(text, url, filename, colorClasses) {
+            const btn = document.createElement('button');
+            btn.className = `w-full ${colorClasses} text-white font-bold py-3.5 px-4 rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5`;
+            
+            // เปลี่ยนไอคอนตามประเภทไฟล์ (MP4 vs MP3)
+            let iconSvg = text.includes('MP3') 
+                ? `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>`
+                : `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
+            
+            btn.innerHTML = `${iconSvg} ${text}`;
+            btn.onclick = () => downloadMediaBlob(url, filename, btn);
+            return btn;
+        }
+
+        async function downloadMediaBlob(url, filename, btnElement) {
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div> กำลังดาวน์โหลด...`;
+            btnElement.disabled = true;
+            btnElement.classList.add('opacity-75', 'cursor-not-allowed', 'hover:-translate-y-0');
+
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                // เบราว์เซอร์อาจบล็อกการดึง Blob ข้ามโดเมน ให้เปิดลิงก์ดาวน์โหลดตรงๆ
+                window.open(url, '_blank');
+            } finally {
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+                btnElement.classList.remove('opacity-75', 'cursor-not-allowed', 'hover:-translate-y-0');
+            }
+        }
+    </script>
+</body>
+</html>

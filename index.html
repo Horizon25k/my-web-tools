@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Web Tools - หน้าหลัก</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                My Web <span class="text-indigo-600">Tools</span>
+            </h1>
+            <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+                รวบรวมเครื่องมืออรรถประโยชน์ส่วนตัว ทำงานรวดเร็วบนเครื่องของคุณเอง (Localhost)
+            </p>
+        </div>
+
+        <!-- Tool Cards Grid (เปลี่ยนเป็น 3 คอลัมน์) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- Card 1: WEBP to PDF -->
+            <a href="webp_pdf.html" class="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="h-14 w-14 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full text-xs font-semibold group-hover:bg-indigo-100">ออฟไลน์ 100%</span>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">WEBP เป็น PDF</h2>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    แปลงไฟล์รูปภาพ WEBP หลายๆ ไฟล์รวมเป็น PDF ไฟล์เดียว พร้อมระบบจัดเรียงชื่อไฟล์และลากสลับหน้า
+                </p>
+            </a>
+
+            <!-- Card 2: X Downloader -->
+            <a href="x-downloader.html" class="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-black transition-all duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="h-14 w-14 bg-gray-100 text-gray-800 rounded-xl flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-gray-800 bg-gray-100 px-3 py-1 rounded-full text-xs font-semibold group-hover:bg-gray-200">ใช้อินเทอร์เน็ต</span>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-black transition-colors">โหลดคลิป X (Twitter)</h2>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    ดาวน์โหลดวิดีโอ MP4 จาก X (Twitter) ลงเครื่องโดยตรง พร้อมแสดงพรีวิวรายละเอียดโพสต์
+                </p>
+            </a>
+
+            <!-- Card 3: TikTok Downloader (มาใหม่!) -->
+            <a href="tiktok-downloader.html" class="group block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-pink-200 transition-all duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="h-14 w-14 bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 448 512">
+                            <path d="M448 209.91a210.06 210.06 0 0 1-122.77-39.25V349.38A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0l88 0a121.18 121.18 0 0 0 1.86 22.17h0A122.18 122.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z"/>
+                        </svg>
+                    </div>
+                    <span class="text-pink-600 bg-pink-50 px-3 py-1 rounded-full text-xs font-semibold group-hover:bg-pink-100">ใช้อินเทอร์เน็ต</span>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-pink-600 transition-colors">โหลดคลิป TikTok</h2>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    ดาวน์โหลดวิดีโอจาก TikTok แบบไม่มีลายน้ำ เลือกระดับความละเอียด HD หรือแยกโหลดเฉพาะไฟล์เสียง MP3 ได้
+                </p>
+            </a>
+
+        </div>
+        
+        <div class="mt-12 text-center text-gray-400 text-sm">
+            <p>พัฒนาสำหรับใช้งานบนเครื่อง Localhost</p>
+        </div>
+    </div>
+
+</body>
+</html>
