@@ -124,12 +124,12 @@
                 btnContainer.innerHTML = '';
 
                 const btn = document.createElement('a');
-                btn.href = data.video_url;
-                btn.target = '_blank';
+                btn.href = `https://my-web-tools-axku.onrender.com/api/force_download?url=${encodeURIComponent(data.video_url)}`;
+                    btn.setAttribute('download', 'x-video.mp4');
                 btn.rel = 'noreferrer noopener'; 
                 btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer';
                 btn.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg> 
-                                 คลิกเพื่อเปิดวิดีโอ MP4`;
+                                คลิกเพื่อเปิดวิดีโอ MP4`;
                 
                 btnContainer.appendChild(btn);
                 resultDiv.classList.remove('hidden');

@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify, send_file
 import os
 import tempfile
-from flask_cors import CORS
 import yt_dlp
+import urllib.request
+from flask_cors import CORS
+from flask import Response
 
 app = Flask(__name__)
 CORS(app) # อนุญาตให้หน้าเว็บ HTML เรียกใช้ API นี้ได้
@@ -79,6 +81,28 @@ def get_x_video():
         if cookie_file_path and os.path.exists(cookie_file_path):
             os.unlink(cookie_file_path)
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/force_download', methods=['GET'])
+def force_download():
+    video_url = request.args.get('url')
+    if not video_url:
+        return "ไม่มี URL", 400
+        
+    def generate():
+        # ดึงไฟล์วิดีโอจากเซิร์ฟเวอร์ X โดยตรงและสตรีมส่งกลับไปให้ผู้ใช้
+        req = urllib.request.Request(video_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            while True:
+                chunk = response.read(8192)
+                if not chunk:
+                    break
+                yield chunk
+
+    return Response(
+        generate(),
+        mimetype='video/mp4',
+        headers={'Content-Disposition': 'attachment; filename="x-video.mp4"'}
+    )
 
 if __name__ == '__main__':
     # รองรับการรันบน Cloud (อ่านพอร์ตจากระบบ หรือใช้ 5000 ถ้าทดสอบบนเครื่องตัวเอง)
