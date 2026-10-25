@@ -66,10 +66,6 @@
                             <div id="x-download-buttons" class="flex flex-col gap-3">
                                 <!-- ลิงก์ดาวน์โหลดจะถูกเพิ่มที่นี่ -->
                             </div>
-                            
-                            <p class="mt-3 text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-200">
-                                <b>วิธีโหลด:</b> คลิกปุ่มด้านบน วิดีโอจะเปิดในหน้าใหม่ ให้คลิกขวาที่ตัววิดีโอแล้วเลือก <b>"Save video as..." (บันทึกวิดีโอเป็น...)</b>
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -95,7 +91,7 @@
             resultDiv.classList.add('hidden');
 
             if (!urlInput) {
-                errorText.textContent = 'กรุณาวางลิงก์ X หรือ Twitter ก่อนครับ';
+                errorText.textContent = 'กรุณาวางลิงก์ X หรือ Twitter ก่อน';
                 errorDiv.classList.remove('hidden');
                 return;
             }
@@ -128,8 +124,8 @@
                     btn.setAttribute('download', 'x-video.mp4');
                 btn.rel = 'noreferrer noopener'; 
                 btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer';
-                btn.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg> 
-                                คลิกเพื่อเปิดวิดีโอ MP4`;
+                btn.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg> 
+                    Dowlond (MP4)`;
                 
                 btnContainer.appendChild(btn);
                 resultDiv.classList.remove('hidden');
