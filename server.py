@@ -1,11 +1,20 @@
+from flask import Flask, request, jsonify, send_file
 import os
 import tempfile
-from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
 
 app = Flask(__name__)
 CORS(app) # อนุญาตให้หน้าเว็บ HTML เรียกใช้ API นี้ได้
+# กำหนดให้เข้าลิงก์หลัก (/) แล้วแสดงหน้า index.html
+@app.route('/', methods=['GET'])
+def home():
+    return send_file('index.html')
+
+# กำหนดเส้นทางสำหรับหน้าดาวน์โหลด
+@app.route('/x-downloader.html', methods=['GET'])
+def x_downloader_page():
+    return send_file('x-downloader.html')
 
 @app.route('/api/get_x_video', methods=['POST'])
 def get_x_video():
