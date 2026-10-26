@@ -29,9 +29,18 @@ def tiktok_downloader_page():
 def protocraft_page():
     return send_file('protocraft.html')
 
+@app.route('/pdfcraft.html', methods=['GET'])
+def pdfcraft_page():
+    return send_file('pdfcraft.html')
+
+
+
 @app.route('/public/<path:filename>', methods=['GET'])
 def serve_public_files(filename):
     return send_from_directory('public', filename)
+
+
+
 
 @app.route('/api/get_x_video', methods=['POST'])
 def get_x_video():
