@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 import os
 import tempfile
 import yt_dlp
@@ -13,7 +13,6 @@ CORS(app) # อนุญาตให้หน้าเว็บ HTML เรี�
 def home():
     return send_file('index.html')
 
-# กำหนดเส้นทางสำหรับหน้าดาวน์โหลด
 @app.route('/x-downloader.html', methods=['GET'])
 def x_downloader_page():
     return send_file('x-downloader.html')
@@ -25,6 +24,14 @@ def webp_pdf_page():
 @app.route('/tiktok-downloader.html', methods=['GET'])
 def tiktok_downloader_page():
     return send_file('tiktok-downloader.html')
+
+@app.route('/protocraft.html', methods=['GET'])
+def protocraft_page():
+    return send_file('protocraft.html')
+
+@app.route('/public/<path:filename>', methods=['GET'])
+def serve_public_files(filename):
+    return send_from_directory('public', filename)
 
 @app.route('/api/get_x_video', methods=['POST'])
 def get_x_video():
