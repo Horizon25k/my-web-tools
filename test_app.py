@@ -20,7 +20,7 @@ def test_tools_pages(client):
 
 # เทสต์การเข้าถึงโฟลเดอร์ public (โปรเจกต์ Craft)
 def test_public_craft_pages(client):
-    assert client.get('/public/photocraft/protocraft.html').status_code == 200
+    assert client.get('/public/photocraft/photocraft.html').status_code == 200
     assert client.get('/public/pdfcraft/pdfcraft.html').status_code == 200
 
 # เทสต์ระบบ API บังคับดาวน์โหลดวิดีโอ (X Downloader)
