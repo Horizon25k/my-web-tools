@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import os
 import tempfile
 import yt_dlp
@@ -8,32 +8,23 @@ from flask import Response
 
 app = Flask(__name__)
 CORS(app) # อนุญาตให้หน้าเว็บ HTML เรียกใช้ API นี้ได้
+
 # กำหนดให้เข้าลิงก์หลัก (/) แล้วแสดงหน้า index.html
 @app.route('/', methods=['GET'])
 def home():
-    return send_file('index.html')
+    return render_template('index.html')
 
 @app.route('/x-downloader.html', methods=['GET'])
 def x_downloader_page():
-    return send_file('x-downloader.html')
+    return render_template('x-downloader.html')
 
 @app.route('/webp_pdf.html', methods=['GET'])
 def webp_pdf_page():
-    return send_file('webp_pdf.html')
+    return render_template('webp_pdf.html')
 
 @app.route('/tiktok-downloader.html', methods=['GET'])
 def tiktok_downloader_page():
-    return send_file('tiktok-downloader.html')
-
-@app.route('/protocraft.html', methods=['GET'])
-def protocraft_page():
-    return send_file('protocraft.html')
-
-@app.route('/pdfcraft.html', methods=['GET'])
-def pdfcraft_page():
-    return send_file('pdfcraft.html')
-
-
+    return render_template('tiktok-downloader.html')
 
 @app.route('/public/<path:filename>', methods=['GET'])
 def serve_public_files(filename):
@@ -123,5 +114,5 @@ def force_download():
 if __name__ == '__main__':
     # รองรับการรันบน Cloud (อ่านพอร์ตจากระบบ หรือใช้ 5000 ถ้าทดสอบบนเครื่องตัวเอง)
     port = int(os.environ.get('PORT', 5000))
-    print(f"เปิดเซิร์ฟเวอร์หลังบ้านแล้ว! กำลังรันอยู่ที่พอร์ต {port}")
+    print(f"เปิดเซิร์ฟเวอร์แล้ว กำลังรันอยู่ที่พอร์ต {port}")
     app.run(host='0.0.0.0', port=port)

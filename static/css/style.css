@@ -1,0 +1,212 @@
+/* static/css/style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+        /* ==========================================
+        นำโค้ดด้านล่างนี้ไปใส่ใน static/css/style.css
+        ========================================== */
+        
+        /* 1. Base Styles & Variables */
+        :root {
+            --bg-page: #f9fafb;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-light: #f3f4f6;
+            --border-medium: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* 2. Layout & Typography */
+        .page-wrapper {
+            min-height: 100vh;
+            padding: 3rem 1rem;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .text-primary {
+            color: #4f46e5;
+        }
+
+        .page-description {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            max-width: 42rem;
+            margin: 0 auto;
+        }
+
+        /* 3. Sections */
+        .category-section {
+            margin-bottom: 3.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-medium);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .card-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (min-width: 1024px) {
+            .card-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* 4. Tool Cards (Component) */
+        .tool-card {
+            display: block;
+            background-color: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: var(--theme-border-hover);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            height: 3.5rem;
+            width: 3.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--theme-light);
+            color: var(--theme-main);
+            transition: all 0.3s ease;
+        }
+
+        .card-icon svg {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .tool-card:hover .card-icon {
+            background-color: var(--theme-main);
+            color: white;
+        }
+
+        .card-badge {
+            background-color: var(--theme-light);
+            color: var(--theme-main);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .tool-card:hover .card-title {
+            color: var(--theme-main);
+        }
+
+        .card-description {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            line-height: 1.625;
+        }
+
+        /* 5. Color Themes */
+        .theme-indigo {
+            --theme-main: #4f46e5;
+            --theme-light: #eef2ff;
+            --theme-border-hover: #e0e7ff;
+        }
+
+        .theme-black {
+            --theme-main: #000000;
+            --theme-light: #f3f4f6;
+            --theme-border-hover: #000000;
+        }
+        
+        .tool-card.theme-black:hover .card-badge {
+            background-color: #e5e7eb;
+        }
+
+        .theme-pink {
+            --theme-main: #db2777;
+            --theme-light: #fdf2f8;
+            --theme-border-hover: #fbcfe8;
+        }
+
+        .theme-purple {
+            --theme-main: #9333ea;
+            --theme-light: #faf5ff;
+            --theme-border-hover: #e9d5ff;
+        }
+
+        .theme-red {
+            --theme-main: #dc2626;
+            --theme-light: #fef2f2;
+            --theme-border-hover: #fecaca;
+        }
+        /* ==========================================
+        สิ้นสุดโค้ดสำหรับ static/css/style.css
+        ========================================== */
