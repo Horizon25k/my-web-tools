@@ -41,8 +41,8 @@
         </button>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-2xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+    <!-- Main Container (ปรับขยายจาก max-w-2xl เป็น max-w-3xl) -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-10 pb-16">
         
         <!-- Hero Title -->
         <div class="text-center mb-10">
@@ -89,25 +89,25 @@
         </div>
 
         <!-- Result Display -->
-        <div id="x-result" class="hidden mt-6 bg-white rounded-3xl p-5 sm:p-6 shadow-xl shadow-gray-200/50 border border-gray-100 transition-all">
-            <div class="flex flex-col sm:flex-row gap-5 items-start">
+        <div id="x-result" class="hidden mt-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transition-all">
+            <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-stretch">
                 
-                <!-- Thumbnail -->
-                <div class="w-full sm:w-5/12 relative group overflow-hidden rounded-2xl border border-gray-100 bg-gray-900">
-                    <img id="x-thumbnail" class="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-300" src="" alt="Thumbnail">
+                <!-- Thumbnail (ขยายขนาดรูปให้ใหญ่เด่นขึ้น) -->
+                <div class="w-full sm:w-1/2 relative group overflow-hidden rounded-2xl border border-gray-100 bg-gray-900 shrink-0 flex items-center justify-center">
+                    <img id="x-thumbnail" class="w-full h-full min-h-[220px] max-h-[340px] object-cover group-hover:scale-105 transition-transform duration-300" src="" alt="Thumbnail">
                 </div>
 
                 <!-- Detail & Download Button -->
-                <div class="w-full sm:w-7/12 flex flex-col justify-between self-stretch">
+                <div class="w-full sm:w-1/2 flex flex-col justify-between self-stretch">
                     <div>
                         <!-- Author Info -->
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-black text-white text-xs font-bold">X</span>
-                            <h3 id="x-author" class="text-sm font-bold text-gray-900 truncate"></h3>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black text-white text-xs font-bold">X</span>
+                            <h3 id="x-author" class="text-sm sm:text-base font-bold text-gray-900 truncate"></h3>
                         </div>
 
                         <!-- Tweet Content Text -->
-                        <p id="x-text" class="text-xs text-gray-600 line-clamp-3 leading-relaxed mb-4 font-normal bg-gray-50/60 p-3 rounded-xl border border-gray-100/80"></p>
+                        <p id="x-text" class="text-xs sm:text-sm text-gray-600 line-clamp-4 leading-relaxed mb-4 font-normal bg-gray-50/60 p-3.5 rounded-xl border border-gray-100/80"></p>
                     </div>
 
                     <!-- Actions Container -->
@@ -183,7 +183,7 @@
                 btn.href = `/api/force_download?url=${encodeURIComponent(data.video_url)}`;
                 btn.setAttribute('download', 'x-video.mp4');
                 btn.rel = 'noreferrer noopener'; 
-                btn.className = 'w-full bg-black hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-xl shadow-md flex items-center justify-between text-xs sm:text-sm transition-all active:scale-[0.99] group';
+                btn.className = 'w-full bg-black hover:bg-gray-800 text-white font-semibold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-between text-xs sm:text-sm transition-all active:scale-[0.99] group';
                 
                 btn.innerHTML = `
                     <span class="flex items-center gap-2">
