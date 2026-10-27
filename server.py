@@ -30,6 +30,9 @@ def tiktok_downloader_page():
 def serve_public_files(filename):
     return send_from_directory('public', filename)
 
+@app.route('/pdf_merge.html')
+def pdf_merge():
+    return render_template('pdf_merge.html')
 
 
 

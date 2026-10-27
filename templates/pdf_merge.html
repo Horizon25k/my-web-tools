@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Merger - รวมไฟล์ PDF</title>
+    
+    <!-- ป้องกันแสงสีขาววูบวาบ (FOUC Mitigation) -->
+    <script>
+        (function() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- pdf-lib สำหรับจัดการและรวมไฟล์ PDF บนเบราว์เซอร์ -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <!-- PDF.js สำหรับดึงภาพพรีวิวหน้าทั้งหมดในไฟล์ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- SortableJS สำหรับลากวางจัดลำดับไฟล์ -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        
+        .sortable-ghost { opacity: 0.3; transform: scale(0.98); }
+        .sortable-drag { cursor: grabbing !important; }
+        .pdf-item { cursor: grab; }
+        .pdf-item:active { cursor: grabbing; }
+
+        /* ซ่อน Scrollbar ของ Modal เพื่อความสะอาดตาแต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-300">
+
+    <!-- Top Navigation Bar -->
+    <header class="max-w-5xl mx-auto pt-6 px-4 sm:px-6 flex items-center justify-between">
+        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white/80 hover:bg-white border border-gray-200/80 rounded-full shadow-sm hover:shadow transition-all duration-200 backdrop-blur-md group">
+            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            หน้าหลัก
+        </a>
+
+        <!-- ปุ่มสลับธีม -->
+        <button id="theme-toggle" class="flex items-center justify-center w-10 h-10 bg-white/80 border border-gray-200/80 rounded-full shadow-sm text-gray-600 hover:text-indigo-600 hover:bg-white transition-all duration-200 backdrop-blur-md focus:outline-none" aria-label="Toggle Dark Mode">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-10 pb-20">
+        
+        <!-- Hero Section -->
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100/80 text-emerald-600 text-xs font-semibold mb-4 shadow-sm">
+                <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                ออฟไลน์ 100% ปลอดภัย ไม่ส่งไฟล์ขึ้นเซิร์ฟเวอร์
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-3">
+                รวมไฟล์ <span class="bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-rose-600">PDF</span> หลายไฟล์เป็นหนึ่งเดียว
+            </h1>
+            <p class="text-sm sm:text-base text-gray-500 max-w-lg mx-auto leading-relaxed">
+                เลือกไฟล์ PDF หลายไฟล์ เปิดดูหน้าข้างใน สลับลำดับตำแหน่งได้ตามต้องการ แล้วรวมเป็นไฟล์เดียวทันที
+            </p>
+        </div>
+
+        <!-- Controls Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/50 border border-gray-100 mb-6 transition-all">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                
+                <!-- 1. เลือกไฟล์ PDF -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+                        1. เลือกไฟล์ PDF
+                    </label>
+                    <input type="file" id="pdfInput" accept="application/pdf" multiple 
+                        class="block w-full text-xs text-gray-500 
+                        file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 
+                        file:text-xs file:font-semibold file:bg-red-50 file:text-red-600 
+                        hover:file:bg-red-100 border border-gray-200 rounded-2xl bg-gray-50/50 p-1.5 focus:outline-none transition-all">
+                </div>
+
+                <!-- 2. ตั้งชื่อไฟล์ใหม่ -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+                        2. กำหนดชื่อไฟล์รวม PDF
+                    </label>
+                    <input type="text" id="filenameInput" placeholder="merged-document (ไม่ต้องใส่ .pdf)" 
+                        class="block w-full border border-gray-200 bg-gray-50/50 rounded-2xl py-3 px-4 
+                        focus:outline-none focus:border-red-500 focus:bg-white text-sm transition-all placeholder:text-gray-400 font-medium">
+                </div>
+            </div>
+            
+            <!-- Tip Banner -->
+            <div class="text-xs text-gray-600 bg-amber-50/70 border border-amber-200/60 p-4 rounded-2xl flex items-start gap-3">
+                <div class="p-1 bg-amber-100 rounded-lg shrink-0 text-amber-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="leading-relaxed">
+                    <strong class="font-semibold text-gray-800">เคล็ดลับ:</strong> กดปุ่ม <strong class="font-semibold text-gray-800">"ดูหน้าในไฟล์"</strong> เพื่อเปิดพรีวิว และสามารถ <strong class="font-semibold text-gray-800">คลิกที่รูปเพื่อขยายซูมดูเต็มจอ</strong> ได้อย่างคมชัดครับ
+                </p>
+            </div>
+        </div>
+
+        <!-- PDF List Container (แสดงรายการไฟล์แบบ Drag & Drop) -->
+        <div id="pdfListContainer" class="flex flex-col gap-3 mb-8"></div>
+
+        <!-- Merge Button -->
+        <div class="text-center">
+            <button id="mergeBtn" class="hidden w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-red-500/25 transition-all duration-200 active:scale-95 text-sm sm:text-base items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+                </svg>
+                <span>รวมไฟล์ PDF</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Modal ขยายรูปใหญ่ พร้อมระบบ Zoom -->
+    <div id="previewModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6 transition-all">
+        <!-- Modal Top Bar -->
+        <div class="w-full max-w-5xl flex items-center justify-between bg-white/10 text-white px-5 py-3 rounded-2xl backdrop-blur-md border border-white/10 mb-3 z-10 shrink-0">
+            <h3 id="modalTitle" class="text-xs sm:text-sm font-semibold truncate pr-4"></h3>
+            
+            <!-- เครื่องมือควบคุมการซูม (Zoom Toolbar) -->
+            <div class="flex items-center gap-2">
+                <div class="flex items-center bg-black/40 rounded-xl p-1 border border-white/10">
+                    <button type="button" onclick="changeZoom(-0.25)" class="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors font-bold text-lg" title="ซูมออก (-)">-</button>
+                    <span id="zoomPercent" class="text-xs font-mono font-semibold px-2.5 min-w-[50px] text-center">100%</span>
+                    <button type="button" onclick="changeZoom(0.25)" class="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors font-bold text-lg" title="ซูมเข้า (+)">+</button>
+                    <button type="button" onclick="resetZoom()" class="px-2 py-1 text-[11px] hover:bg-white/20 rounded-lg transition-colors font-medium border-l border-white/10 ml-1">รีเซ็ต</button>
+                </div>
+                
+                <button type="button" onclick="closePreviewModal()" class="w-9 h-9 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all ml-2" title="ปิดหน้าต่าง">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Content Area (พื้นที่แสดงรูปขนาดใหญ่ + รองรับการเลื่อน/ซูม) -->
+        <div id="modalScrollArea" class="w-full max-w-5xl flex-1 overflow-auto flex items-start justify-center p-4 rounded-3xl bg-white/5 border border-white/5 no-scrollbar">
+            <div id="canvasWrapper" class="transition-transform duration-150 origin-top flex items-center justify-center py-2">
+                <canvas id="modalCanvas" class="max-w-full rounded-xl shadow-2xl bg-white border border-gray-200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const pdfInput = document.getElementById('pdfInput');
+        const filenameInput = document.getElementById('filenameInput');
+        const pdfListContainer = document.getElementById('pdfListContainer');
+        const mergeBtn = document.getElementById('mergeBtn');
+        
+        // Modal & Zoom Elements
+        const previewModal = document.getElementById('previewModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalCanvas = document.getElementById('modalCanvas');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        const zoomPercent = document.getElementById('zoomPercent');
+        const modalScrollArea = document.getElementById('modalScrollArea');
+        
+        let pdfFiles = [];
+        let sortableInstance = null;
+        let currentZoom = 1.0;
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        const naturalSort = (a, b) => {
+            const ax = [], bx = [];
+            a.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
+            b.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });
+            
+            while(ax.length && bx.length) {
+                const an = ax.shift();
+                const bn = bx.shift();
+                const nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+                if(nn) return nn;
+            }
+            return ax.length - bx.length;
+        };
+
+        pdfInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            files.sort((a, b) => naturalSort(a.name, b.name));
+
+            pdfListContainer.innerHTML = '';
+            pdfFiles = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileId = `pdf-${Date.now()}-${i}`;
+                
+                let pageCount = 0;
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+                    pageCount = pdfDoc.getPageCount();
+                } catch (err) {
+                    console.warn(`ไม่สามารถนับจำนวนหน้าของไฟล์ ${file.name} ได้:`, err);
+                }
+
+                pdfFiles.push({ file: file, id: fileId, pageCount: pageCount, isLoadedPreviews: false });
+
+                const item = document.createElement('div');
+                item.className = 'pdf-item bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col gap-3 group';
+                item.dataset.id = fileId;
+                
+                item.innerHTML = `
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="index-badge w-7 h-7 bg-red-50 text-red-600 rounded-xl text-xs font-bold flex items-center justify-center shrink-0 border border-red-100">
+                                ${i + 1}
+                            </div>
+                            
+                            <div class="p-2 bg-gray-50 text-red-500 rounded-xl shrink-0 group-hover:bg-red-50 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+                                </svg>
+                            </div>
+                            
+                            <div class="min-w-0">
+                                <h4 class="text-sm font-semibold text-gray-900 truncate" title="${file.name}">${file.name}</h4>
+                                <p class="text-xs text-gray-400 font-medium">
+                                    ${pageCount > 0 ? pageCount + ' หน้า' : 'ไม่ทราบหน้า'} • ${formatBytes(file.size)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onclick="togglePagesPreview('${fileId}')" 
+                                class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all flex items-center gap-1 hover:text-gray-900">
+                                <svg class="w-3.5 h-3.5 transition-transform" id="arrow-${fileId}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                                <span id="toggle-text-${fileId}">ดูหน้าในไฟล์</span>
+                            </button>
+
+                            <button type="button" onclick="removePdfItem('${fileId}')" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="ลบรายการนี้">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+
+                            <div class="p-1.5 text-gray-300 group-hover:text-gray-500 transition-colors cursor-grab">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pages-container-${fileId}" class="hidden pt-3 border-t border-gray-100/80">
+                        <div class="pages-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100">
+                        </div>
+                    </div>
+                `;
+                pdfListContainer.appendChild(item);
+            }
+
+            if (pdfFiles.length > 0) {
+                mergeBtn.classList.remove('hidden');
+                mergeBtn.classList.add('flex');
+            }
+
+            if (sortableInstance) sortableInstance.destroy();
+            sortableInstance = new Sortable(pdfListContainer, {
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: function () { updateBadges(); }
+            });
+        });
+
+        async function togglePagesPreview(fileId) {
+            const container = document.getElementById(`pages-container-${fileId}`);
+            const textSpan = document.getElementById(`toggle-text-${fileId}`);
+            const arrowIcon = document.getElementById(`arrow-${fileId}`);
+            const pdfObj = pdfFiles.find(p => p.id === fileId);
+
+            if (!container || !pdfObj) return;
+
+            const isHidden = container.classList.contains('hidden');
+
+            if (isHidden) {
+                container.classList.remove('hidden');
+                textSpan.innerText = 'ซ่อนหน้าในไฟล์';
+                arrowIcon.classList.add('rotate-180');
+
+                if (!pdfObj.isLoadedPreviews) {
+                    await renderPdfThumbnails(pdfObj, container.querySelector('.pages-grid'));
+                    pdfObj.isLoadedPreviews = true;
+                }
+            } else {
+                container.classList.add('hidden');
+                textSpan.innerText = 'ดูหน้าในไฟล์';
+                arrowIcon.classList.remove('rotate-180');
+            }
+        }
+
+        async function renderPdfThumbnails(pdfObj, gridElement) {
+            gridElement.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-gray-400 font-medium">กำลังโหลดหน้าพรีวิว...</div>`;
+            
+            try {
+                const arrayBuffer = await pdfObj.file.arrayBuffer();
+                const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                gridElement.innerHTML = '';
+
+                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                    const page = await pdfDoc.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 0.8 });
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative flex flex-col items-center bg-white p-2 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md hover:border-red-200 transition-all cursor-pointer group/item';
+                    
+                    wrapper.onclick = () => openPreviewModal(pdfObj, pageNum);
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d', { alpha: false });
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    canvas.className = 'rounded-xl object-contain w-full h-auto border border-gray-100 bg-white';
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-semibold gap-1 backdrop-blur-[1px]';
+                    overlay.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path></svg> ขยายซูม`;
+
+                    const label = document.createElement('span');
+                    label.className = 'text-[11px] font-bold text-gray-600 mt-1.5';
+                    label.innerText = `หน้า ${pageNum}`;
+
+                    wrapper.appendChild(canvas);
+                    wrapper.appendChild(overlay);
+                    wrapper.appendChild(label);
+                    gridElement.appendChild(wrapper);
+                }
+            } catch (err) {
+                console.error(err);
+                gridElement.innerHTML = `<div class="col-span-full py-3 text-center text-xs text-red-500 font-medium">ไม่สามารถแสดงหน้าตัวอย่างได้</div>`;
+            }
+        }
+
+        // ==========================================
+        // Modal & Interactive Controls (Scroll Lock & Touch Support)
+        // ==========================================
+        async function openPreviewModal(pdfObj, pageNum) {
+            modalTitle.innerText = `${pdfObj.file.name} (หน้า ${pageNum})`;
+            previewModal.classList.remove('hidden');
+            
+            // ล็อกการสกอร์ลฉากหลังเมื่อเปิด Modal
+            document.body.classList.add('overflow-hidden');
+            resetZoom();
+
+            const context = modalCanvas.getContext('2d', { alpha: false });
+            context.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+
+            try {
+                const arrayBuffer = await pdfObj.file.arrayBuffer();
+                const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const page = await pdfDoc.getPage(pageNum);
+                
+                const viewport = page.getViewport({ scale: 2.5 });
+                modalCanvas.height = viewport.height;
+                modalCanvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+            } catch (err) {
+                console.error('Modal Render Error:', err);
+            }
+        }
+
+        function closePreviewModal() {
+            previewModal.classList.add('hidden');
+            // ปลดล็อกการสกอร์ลฉากหลังเมื่อปิด Modal
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal || e.target === modalScrollArea) {
+                closePreviewModal();
+            }
+        });
+
+        function changeZoom(delta) {
+            currentZoom = Math.min(Math.max(0.5, currentZoom + delta), 3.0);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1.0;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            canvasWrapper.style.transform = `scale(${currentZoom})`;
+            zoomPercent.innerText = `${Math.round(currentZoom * 100)}%`;
+        }
+
+        // 1. แยกการเลื่อนใน Modal ออกจากฉากหลัง (ป้องกัน Scroll Leak)
+        modalScrollArea.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.ctrlKey || e.metaKey) {
+                changeZoom(e.deltaY < 0 ? 0.25 : -0.25);
+            } else {
+                modalScrollArea.scrollTop += e.deltaY;
+                modalScrollArea.scrollLeft += e.deltaX;
+            }
+        }, { passive: false });
+
+        // 2. ระบบ Mouse Drag to Pan สำหรับคอมพิวเตอร์
+        let isPanning = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        modalScrollArea.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button')) return;
+            isPanning = true;
+            modalScrollArea.classList.add('cursor-grabbing');
+            startX = e.pageX - modalScrollArea.offsetLeft;
+            startY = e.pageY - modalScrollArea.offsetTop;
+            scrollLeft = modalScrollArea.scrollLeft;
+            scrollTop = modalScrollArea.scrollTop;
+        });
+
+        modalScrollArea.addEventListener('mouseleave', () => {
+            isPanning = false;
+            modalScrollArea.classList.remove('cursor-grabbing');
+        });
+
+        modalScrollArea.addEventListener('mouseup', () => {
+            isPanning = false;
+            modalScrollArea.classList.remove('cursor-grabbing');
+        });
+
+        modalScrollArea.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            e.preventDefault();
+            const x = e.pageX - modalScrollArea.offsetLeft;
+            const y = e.pageY - modalScrollArea.offsetTop;
+            const walkX = (x - startX) * 1.5;
+            const walkY = (y - startY) * 1.5;
+            modalScrollArea.scrollLeft = scrollLeft - walkX;
+            modalScrollArea.scrollTop = scrollTop - walkY;
+        });
+
+        // 3. ระบบ Touch Events สำหรับ iPad และ มือถือ (ลากรูป & หนีบนิ้วซูม Pinch Zoom)
+        let touchStartX = 0, touchStartY = 0;
+        let initialPinchDist = null;
+
+        modalScrollArea.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isPanning = true;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                scrollLeft = modalScrollArea.scrollLeft;
+                scrollTop = modalScrollArea.scrollTop;
+            } else if (e.touches.length === 2) {
+                isPanning = false;
+                initialPinchDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        }, { passive: true });
+
+        modalScrollArea.addEventListener('touchmove', (e) => {
+            if (isPanning && e.touches.length === 1) {
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const deltaY = e.touches[0].clientY - touchStartY;
+                modalScrollArea.scrollLeft = scrollLeft - deltaX;
+                modalScrollArea.scrollTop = scrollTop - deltaY;
+            } else if (e.touches.length === 2 && initialPinchDist) {
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const delta = dist - initialPinchDist;
+                if (Math.abs(delta) > 12) {
+                    changeZoom(delta > 0 ? 0.1 : -0.1);
+                    initialPinchDist = dist;
+                }
+            }
+        }, { passive: true });
+
+        modalScrollArea.addEventListener('touchend', () => {
+            isPanning = false;
+            initialPinchDist = null;
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePreviewModal();
+        });
+
+        function updateBadges() {
+            const items = pdfListContainer.querySelectorAll('.pdf-item');
+            items.forEach((item, index) => {
+                item.querySelector('.index-badge').innerText = index + 1;
+            });
+        }
+
+        function removePdfItem(id) {
+            pdfFiles = pdfFiles.filter(item => item.id !== id);
+            const element = pdfListContainer.querySelector(`[data-id="${id}"]`);
+            if (element) element.remove();
+            
+            updateBadges();
+
+            if (pdfFiles.length === 0) {
+                mergeBtn.classList.add('hidden');
+                mergeBtn.classList.remove('flex');
+            }
+        }
+
+        mergeBtn.addEventListener('click', async () => {
+            if (pdfFiles.length === 0) return;
+
+            mergeBtn.disabled = true;
+            mergeBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            const originalBtnText = mergeBtn.querySelector('span').innerText;
+            mergeBtn.querySelector('span').innerText = 'กำลังรวมไฟล์ PDF...';
+
+            try {
+                const mergedPdf = await PDFLib.PDFDocument.create();
+                const domItems = pdfListContainer.querySelectorAll('.pdf-item');
+                
+                for (let item of domItems) {
+                    const id = item.dataset.id;
+                    const pdfObj = pdfFiles.find(p => p.id === id);
+                    if (!pdfObj) continue;
+
+                    const arrayBuffer = await pdfObj.file.arrayBuffer();
+                    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+                    
+                    const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                    copiedPages.forEach(page => mergedPdf.addPage(page));
+                }
+
+                const pdfBytes = await mergedPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                let finalFilename = filenameInput.value.trim();
+                if (!finalFilename) finalFilename = 'merged-document';
+                if (!finalFilename.toLowerCase().endsWith('.pdf')) {
+                    finalFilename += '.pdf';
+                }
+
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = finalFilename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการรวมไฟล์ PDF: ' + err.message);
+            } finally {
+                mergeBtn.disabled = false;
+                mergeBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                mergeBtn.querySelector('span').innerText = originalBtnText;
+            }
+        });
+    </script>
+    <script src="/static/js/theme.js"></script>
+</body>
+</html>
