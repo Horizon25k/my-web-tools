@@ -89,6 +89,15 @@
     </div>
 
     <script>
+        // 1. แยกฟังก์ชันแปลงขนาดไฟล์ไว้ด้านนอกสุด เพื่อให้เรียกใช้ได้ง่าย
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return 'ไม่ทราบขนาด';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
         async function fetchXVideo() {
             const urlInput = document.getElementById('x-url-input').value.trim();
             const errorDiv = document.getElementById('x-error');
@@ -108,8 +117,7 @@
             loadingDiv.classList.remove('hidden');
 
             try {
-                // แก้ไขรูปแบบลิงก์ fetch ให้ถูกต้อง ไม่มีวงเล็บ Markdown
-                const response = await fetch('https://my-web-tools-axku.onrender.com/api/get_x_video', {
+                const response = await fetch('/api/get_x_video', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: urlInput })
@@ -128,13 +136,19 @@
                 const btnContainer = document.getElementById('x-download-buttons');
                 btnContainer.innerHTML = '';
 
+                // 2. ดึงขนาดไฟล์มาแปลงค่า โดยทำอยู่ "ข้างใน" try block หลังจากได้ตัวแปร data มาแล้ว
+                const sizeText = data.filesize ? formatBytes(data.filesize) : 'ไม่ทราบขนาด';
+
                 const btn = document.createElement('a');
-                btn.href = `https://my-web-tools-axku.onrender.com/api/force_download?url=${encodeURIComponent(data.video_url)}`;
-                    btn.setAttribute('download', 'x-video.mp4');
+                // หมายเหตุ: สามารถใช้ /api/force_download ได้เลย หากรันอยู่บนเซิร์ฟเวอร์เดียวกัน (Relative Path)
+                btn.href = `/api/force_download?url=${encodeURIComponent(data.video_url)}`;
+                btn.setAttribute('download', 'x-video.mp4');
                 btn.rel = 'noreferrer noopener'; 
                 btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer';
+                
+                // 3. แทรกขนาดไฟล์ (${sizeText}) ลงไปในข้อความปุ่ม
                 btn.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg> 
-                    Dowlond (MP4)`;
+                    ดาวน์โหลด MP4 (${sizeText})`;
                 
                 btnContainer.appendChild(btn);
                 resultDiv.classList.remove('hidden');

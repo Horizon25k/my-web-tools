@@ -73,6 +73,13 @@ def get_x_video():
                 return jsonify({'error': 'ไม่พบไฟล์วิดีโอ'}), 404
                 
             best_video = sorted(mp4_formats, key=lambda x: x.get('height', 0), reverse=True)[0]
+            filesize = 0
+
+            # ดึงข้อมูลขนาดไฟล์ 
+            try:
+                filesize = best_video.get('filesize') or best_video.get('filesize_approx') or 0
+            except Exception:
+                filesize = 0
             
             # ส่งข้อมูลกลับไปให้หน้าเว็บ HTML
             return jsonify({
@@ -80,7 +87,8 @@ def get_x_video():
                 'author_id': info.get('uploader_id', ''),
                 'text': info.get('title', ''),
                 'thumbnail': info.get('thumbnail', ''),
-                'video_url': best_video.get('url')
+                'video_url': best_video.get('url'),
+                'filesize': filesize
             })
             
     except Exception as e:

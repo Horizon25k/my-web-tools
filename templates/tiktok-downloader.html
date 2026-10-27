@@ -88,6 +88,15 @@
     </div>
 
     <script>
+        // 1. ฟังก์ชันแปลงขนาดไฟล์ (วางไว้นอกสุดเพื่อให้เรียกใช้งานได้ทั่วไป)
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
         async function fetchTikTok() {
             const urlInput = document.getElementById('tk-url-input').value.trim();
             const errorDiv = document.getElementById('tk-error');
@@ -128,19 +137,19 @@
                 const btnContainer = document.getElementById('tk-download-buttons');
                 btnContainer.innerHTML = '';
 
-                // ปุ่มโหลด MP4 (No Watermark)
+                // 2. ดึงขนาดไฟล์มาแสดงต่อท้ายชื่อปุ่ม (อยู่ข้างในฟังก์ชันหลักหลังได้ตัวแปร data แล้ว)
                 if (data.play) {
-                    btnContainer.appendChild(createDownloadButton('ดาวน์โหลด MP4 (คุณภาพปกติ)', data.play, `TikTok_${data.author.unique_id}.mp4`, 'bg-black hover:bg-gray-800'));
+                    const sizeStr = data.size ? ` (${formatBytes(data.size)})` : '';
+                    btnContainer.appendChild(createDownloadButton(`ดาวน์โหลด MP4 คุณภาพปกติ${sizeStr}`, data.play, `TikTok_${data.author.unique_id}.mp4`, 'bg-black hover:bg-gray-800'));
                 }
 
-                // ปุ่มโหลด MP4 (HD) - ถ้ามี
                 if (data.hdplay) {
-                    btnContainer.appendChild(createDownloadButton('ดาวน์โหลด MP4 (คุณภาพ HD)', data.hdplay, `TikTok_HD_${data.author.unique_id}.mp4`, 'bg-pink-600 hover:bg-pink-700'));
+                    const sizeStr = data.hd_size ? ` (${formatBytes(data.hd_size)})` : '';
+                    btnContainer.appendChild(createDownloadButton(`ดาวน์โหลด MP4 คุณภาพ HD${sizeStr}`, data.hdplay, `TikTok_HD_${data.author.unique_id}.mp4`, 'bg-pink-600 hover:bg-pink-700'));
                 }
 
-                // ปุ่มโหลดเสียง MP3
                 if (data.music) {
-                    btnContainer.appendChild(createDownloadButton('ดาวน์โหลดไฟล์เสียง (MP3)', data.music, `TikTok_Audio_${data.author.unique_id}.mp3`, 'bg-indigo-600 hover:bg-indigo-700'));
+                    btnContainer.appendChild(createDownloadButton('ดาวน์โหลดไฟล์เสียง (MP3) คุณภาพปกติ${sizeStr}', data.music, `TikTok_Audio_${data.author.unique_id}.mp3`, 'bg-indigo-600 hover:bg-indigo-700'));
                 }
 
                 resultDiv.classList.remove('hidden');
@@ -185,7 +194,6 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(blobUrl);
             } catch (e) {
-                // เบราว์เซอร์อาจบล็อกการดึง Blob ข้ามโดเมน ให้เปิดลิงก์ดาวน์โหลดตรงๆ
                 window.open(url, '_blank');
             } finally {
                 btnElement.innerHTML = originalText;
