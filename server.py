@@ -108,10 +108,27 @@ def get_youtube_video():
     if not url:
         return jsonify({'error': 'กรุณาระบุ URL วิดีโอ YouTube'}), 400
 
+    # ดึงค่า Cookie จาก Environment Variables บน Render
+    cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '') or os.environ.get('COOKIE_CONTENT', '')
+    cookie_file_path = ''
+
+    if cookie_content:
+        tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt', encoding='utf-8')
+        tf.write(cookie_content)
+        tf.close()
+        cookie_file_path = tf.name
+
     ydl_opts = {
+        'cookiefile': cookie_file_path if cookie_file_path else None,
         'quiet': True,
         'no_warnings': True,
         'format': 'best',
+        # กำหนด Client เป็น android หรือ mweb เพื่อช่วยหลบเลี่ยงระบบตรวจจับ Bot ของ YouTube บน Cloud IP
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'mweb']
+            }
+        }
     }
 
     try:
@@ -125,6 +142,10 @@ def get_youtube_video():
             duration = info.get('duration', 0)
             filesize = info.get('filesize') or info.get('filesize_approx', 0)
 
+            # ลบไฟล์คุกกี้ชั่วคราวทิ้งหลังใช้งานเสร็จ
+            if cookie_file_path and os.path.exists(cookie_file_path):
+                os.unlink(cookie_file_path)
+
             return jsonify({
                 'title': title,
                 'author': author,
@@ -136,6 +157,8 @@ def get_youtube_video():
             })
 
     except Exception as e:
+        if cookie_file_path and os.path.exists(cookie_file_path):
+            os.unlink(cookie_file_path)
         return jsonify({'error': f'ไม่สามารถดึงข้อมูลได้: {str(e)}'}), 500
 
 # ระบบบังคับดาวน์โหลดไฟล์ (Proxy Download Stream)
