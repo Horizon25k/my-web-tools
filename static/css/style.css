@@ -1,8 +1,10 @@
-/* โค้ดฟอนต์เดิมของคุณ */
+
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
-/* ======== ระบบ Dark Mode ======== */
-/* เปลี่ยนสีพื้นหลังหลักและตัวอักษร */
+/* ======== ระบบ Dark Mode (แก้ไขเพื่อป้องกันแสงขาวกระพริบ FOUC) ======== */
+/* เพิ่ม html.dark-mode เพื่อให้พื้นหลังเปลี่ยนเป็นสีมืดตั้งแต่วินาทีแรกที่โหลดหน้า */
+html.dark-mode,
+html.dark-mode body,
 body.dark-mode {
     background-color: #111827 !important; /* สีพื้นหลังเว็บเข้ม */
     color: #f3f4f6 !important;

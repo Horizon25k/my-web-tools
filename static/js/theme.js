@@ -1,17 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
     const toggleBtn = document.getElementById('theme-toggle');
-    const body = document.body;
+    const htmlEl = document.documentElement;
+    const bodyEl = document.body;
 
-    // เช็กค่าที่เคยบันทึกไว้ในเบราว์เซอร์
+    // ซิงก์คลาส dark-mode ให้ตรงกันทั้ง html และ body
     if (localStorage.getItem('theme') === 'dark') {
-        body.classList.add('dark-mode');
+        htmlEl.classList.add('dark-mode');
+        bodyEl.classList.add('dark-mode');
     }
 
-    // เมื่อกดปุ่มให้สลับคลาสและบันทึกค่า
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-            const isDark = body.classList.contains('dark-mode');
+            htmlEl.classList.toggle('dark-mode');
+            bodyEl.classList.toggle('dark-mode');
+            
+            const isDark = htmlEl.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
     }
