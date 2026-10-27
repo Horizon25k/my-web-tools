@@ -88,3 +88,54 @@ body.dark-mode textarea:focus {
     border-color: #60a5fa !important; /* สีฟ้าน้ำทะเลอ่อนๆ ตอนคลิก */
     outline: none !important;
 }
+
+/* ======== ปรับสีปุ่ม Header (กลับหน้าหลัก & ปุ่มสลับธีม) ในโหมดมืด ======== */
+
+/* เปลี่ยนพื้นหลังและสีกรอบของปุ่มทั้งสอง */
+html.dark-mode header a,
+html.dark-mode header button#theme-toggle {
+    background-color: #1f2937 !important; /* สีเทาเข้ม */
+    border-color: #374151 !important;     /* สีกรอบ */
+    color: #e5e7eb !important;            /* สีตัวอักษร/ไอคอนเป็นสีขาวสว่าง */
+}
+
+/* เมื่อชี้เมาส์ (Hover) ที่ปุ่มในโหมดมืด */
+html.dark-mode header a:hover,
+html.dark-mode header button#theme-toggle:hover {
+    background-color: #374151 !important; /* ปรับพื้นหลังให้สว่างขึ้นเล็กน้อย */
+    color: #ffffff !important;
+}
+
+/* ======== แก้ไขสีกล่องคำแนะนำ (Tip Banner) ในโหมดมืด ======== */
+
+/* ปรับสีพื้นหลังและกรอบของกล่องคำแนะนำในโหมดมืด */
+html.dark-mode .bg-amber-50\/70,
+body.dark-mode .bg-amber-50\/70 {
+    background-color: rgba(55, 65, 81, 0.7) !important; /* พื้นหลังเทาเข้มโปร่งแสง */
+    border-color: #4b5563 !important;                 /* กรอบสีเทา */
+    color: #d1d5db !important;                        /* ตัวอักษรทั่วไปเป็นสีเทาสว่าง */
+}
+
+/* ปรับสีไอคอนหลอดไฟ/เครื่องหมายในกล่องคำแนะนำ */
+html.dark-mode .bg-amber-100,
+body.dark-mode .bg-amber-100 {
+    background-color: #4b5563 !important;
+    color: #fbbf24 !important; /* เปลี่ยนไอคอนเป็นสีเหลืองอำพันสว่าง */
+}
+
+/* ปรับสีตัวอักษรเน้นย้ำ (ข้อความตัวหนา <strong class="text-gray-800">) ให้เป็นสีขาวสว่างอ่านง่าย */
+html.dark-mode .text-gray-800,
+body.dark-mode .text-gray-800 {
+    color: #f9fafb !important;
+}
+/* ======== แก้ไขกล่อง Caption หน้า X และ TikTok ในโหมดมืด ======== */
+
+/* บังคับกล่องข้อความ (#x-text และ #tk-text) ให้เป็นพื้นหลังสีขาว ตัวอักษรสีดำใน Dark Mode */
+html.dark-mode #x-text,
+html.dark-mode #tk-text,
+body.dark-mode #x-text,
+body.dark-mode #tk-text {
+    background-color: #ffffff !important; /* พื้นหลังกล่องสีขาว */
+    color: #111827 !important;           /* ตัวอักษรสีดำเข้ม */
+    border-color: #e5e7eb !important;     /* สีกรอบกล่องให้รับกับสีขาว */
+}
