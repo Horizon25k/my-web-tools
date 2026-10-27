@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>YouTube Video Downloader</title>
+    
+    <!-- ป้องกันแสงสีขาววูบวาบ (FOUC Mitigation) -->
+    <script>
+        (function() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen antialiased selection:bg-red-500 selection:text-white transition-colors duration-300">
+
+    <!-- Top Navigation Bar -->
+    <header class="max-w-4xl mx-auto pt-6 px-4 sm:px-6 flex items-center justify-between">
+        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white/80 hover:bg-white border border-gray-200/80 rounded-full shadow-sm hover:shadow transition-all duration-200 backdrop-blur-md group">
+            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            หน้าหลัก
+        </a>
+
+        <!-- ปุ่มสลับธีม -->
+        <button id="theme-toggle" class="flex items-center justify-center w-10 h-10 bg-white/80 border border-gray-200/80 rounded-full shadow-sm text-gray-600 hover:text-red-600 hover:bg-white transition-all duration-200 backdrop-blur-md focus:outline-none" aria-label="Toggle Dark Mode">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+        
+        <!-- Hero Title -->
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-14 h-14 bg-red-50 text-red-600 rounded-2xl mb-4 shadow-lg shadow-red-500/10 border border-red-100/80">
+                <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">
+                YouTube Downloader
+            </h1>
+            <p class="text-sm sm:text-base text-gray-500 max-w-md mx-auto">
+                ดาวน์โหลดวิดีโอจาก YouTube (คลิปทั่วไป หรือ Shorts) เป็นไฟล์ MP4 หรือ MP3
+            </p>
+        </div>
+        
+        <!-- Input Card -->
+        <div class="bg-white p-3 sm:p-4 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 transition-all">
+            <div class="relative flex items-center">
+                <div class="absolute left-4 text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    </svg>
+                </div>
+                <input type="text" id="yt-url-input" 
+                    class="w-full pl-11 pr-28 py-3.5 bg-gray-50/70 text-gray-900 rounded-2xl border border-transparent focus:border-red-500/30 focus:bg-white focus:ring-0 text-sm transition-all placeholder:text-gray-400 font-medium" 
+                    placeholder="วางลิงก์ YouTube ที่นี่...">
+                <button onclick="fetchYouTubeVideo()" 
+                    class="absolute right-1.5 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-red-500/20 active:scale-95 flex items-center gap-1.5">
+                    <span>ดึงข้อมูล</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Loading -->
+        <div id="yt-loading" class="hidden text-center py-12">
+            <div class="inline-flex items-center justify-center p-3 bg-white rounded-full shadow-md border border-gray-100 mb-3">
+                <div class="animate-spin rounded-full h-6 w-6 border-2 border-red-100 border-t-red-600"></div>
+            </div>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider" id="loading-text">กำลังประมวลผลวิดีโอ YouTube...</p>
+        </div>
+
+        <!-- Result Display -->
+        <div id="yt-result" class="hidden mt-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transition-all">
+            <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-stretch">
+                
+                <!-- Thumbnail -->
+                <div class="w-full sm:w-1/2 relative group overflow-hidden rounded-2xl border border-gray-100 bg-gray-900 shrink-0 flex items-center justify-center">
+                    <img id="yt-thumbnail" class="w-full h-full min-h-[200px] max-h-[300px] object-cover group-hover:scale-105 transition-transform duration-300" src="" alt="Thumbnail">
+                    <span id="yt-duration" class="absolute bottom-2.5 right-2.5 bg-black/80 text-white text-[11px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm"></span>
+                </div>
+
+                <!-- Detail & Download Buttons -->
+                <div class="w-full sm:w-1/2 flex flex-col justify-between self-stretch">
+                    <div>
+                        <!-- Author Info -->
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-600 text-white text-xs font-bold">YT</span>
+                            <h3 id="yt-author" class="text-sm sm:text-base font-bold text-gray-900 truncate"></h3>
+                        </div>
+
+                        <!-- Video Title Text -->
+                        <p id="yt-title" class="text-xs sm:text-sm text-gray-600 line-clamp-3 leading-relaxed mb-4 font-normal bg-gray-50/60 p-3.5 rounded-xl border border-gray-100/80"></p>
+                    </div>
+
+                    <!-- Actions Container -->
+                    <div id="yt-download-buttons" class="mt-auto flex flex-col gap-2.5 pt-2">
+                        <!-- ปุ่มดาวน์โหลด MP4 และ MP3 จะถูกสร้างขึ้นที่นี่ -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="yt-error" class="hidden mt-4 p-4 bg-red-50/80 backdrop-blur-md border border-red-100 text-red-600 rounded-2xl text-xs font-semibold flex items-center gap-3">
+            <div class="p-1 bg-red-100 rounded-lg shrink-0">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <span id="yt-error-text"></span>
+        </div>
+
+    </main>
+
+    <script>
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return '';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        async function fetchYouTubeVideo() {
+            const urlInput = document.getElementById('yt-url-input').value.trim();
+            const errorDiv = document.getElementById('yt-error');
+            const errorText = document.getElementById('yt-error-text');
+            const resultDiv = document.getElementById('yt-result');
+            const loadingDiv = document.getElementById('yt-loading');
+
+            errorDiv.classList.add('hidden');
+            resultDiv.classList.add('hidden');
+
+            if (!urlInput) {
+                errorText.textContent = 'กรุณาวางลิงก์ YouTube ก่อนครับ';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            loadingDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/get_youtube_video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'ไม่สามารถดึงข้อมูลวิดีโอจากลิงก์นี้ได้');
+                }
+
+                document.getElementById('yt-thumbnail').src = data.thumbnail || '';
+                document.getElementById('yt-author').textContent = data.author || 'YouTube Creator';
+                document.getElementById('yt-title').textContent = data.title || 'ไม่มีชื่อคลิป';
+                document.getElementById('yt-duration').textContent = formatDuration(data.duration);
+
+                const btnContainer = document.getElementById('yt-download-buttons');
+                btnContainer.innerHTML = '';
+
+                // สร้างปุ่มดาวน์โหลด MP4 (Video)
+                if (data.video_url) {
+                    const sizeStr = data.filesize ? formatBytes(data.filesize) : '';
+                    btnContainer.appendChild(createDownloadBtn('ดาวน์โหลด MP4 (วิดีโอ)', sizeStr, data.video_url, 'youtube-video.mp4', 'bg-red-600 hover:bg-red-700 shadow-red-500/20', 'MP4'));
+                }
+
+                // สร้างปุ่มดาวน์โหลด MP3 (Audio) ถ้ามี
+                if (data.audio_url) {
+                    btnContainer.appendChild(createDownloadBtn('ดาวน์โหลด MP3 (ไฟล์เสียง)', '', data.audio_url, 'youtube-audio.mp3', 'bg-gray-900 hover:bg-black', 'MP3'));
+                }
+
+                resultDiv.classList.remove('hidden');
+
+            } catch (error) {
+                errorText.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        }
+
+        function createDownloadBtn(label, sizeText, url, filename, colorClasses, typeTag) {
+            const btn = document.createElement('a');
+            btn.href = `/api/force_download?url=${encodeURIComponent(url)}`;
+            btn.setAttribute('download', filename);
+            btn.rel = 'noreferrer noopener';
+            btn.className = `w-full ${colorClasses} text-white font-semibold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-between text-xs sm:text-sm transition-all active:scale-[0.99] group`;
+            
+            let iconSvg = typeTag === 'MP3'
+                ? `<svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>`
+                : `<svg class="w-4 h-4 transition-transform group-hover:translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
+            
+            const badgeText = sizeText ? `${typeTag} • ${sizeText}` : typeTag;
+
+            btn.innerHTML = `
+                <span class="flex items-center gap-2">
+                    ${iconSvg}
+                    ${label}
+                </span>
+                <span class="bg-white/20 text-white px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-wide">
+                    ${badgeText}
+                </span>
+            `;
+            return btn;
+        }
+    </script>
+    <script src="/static/js/theme.js"></script>
+</body>
+</html>

@@ -1,8 +1,13 @@
+/* ==========================================================================
+   1. Base & Typography Settings
+   ========================================================================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-/* ======== ระบบ Dark Mode (แก้ไขเพื่อป้องกันแสงขาวกระพริบ FOUC) ======== */
-/* เพิ่ม html.dark-mode เพื่อให้พื้นหลังเปลี่ยนเป็นสีมืดตั้งแต่วินาทีแรกที่โหลดหน้า */
+/* ==========================================================================
+   2. Dark Mode Core (FOUC Prevention & Layout Defaults)
+   ========================================================================== */
 html.dark-mode,
 html.dark-mode body,
 body.dark-mode {
@@ -10,132 +15,127 @@ body.dark-mode {
     color: #f3f4f6 !important;
 }
 
-/* เปลี่ยนสีการ์ดที่เป็นพื้นขาว (bg-white) ให้เป็นสีเทาเข้ม */
+/* พื้นหลังการ์ด/คอนเทนเนอร์ (bg-white) */
 body.dark-mode .bg-white {
     background-color: #1f2937 !important;
     border-color: #374151 !important;
 }
 
-/* เปลี่ยนสีหัวข้อและตัวอักษรสีดำต่างๆ ให้สว่างขึ้น */
+/* หัวข้อและตัวอักษรเน้นย้ำ */
+body.dark-mode h1,
+body.dark-mode h2,
 body.dark-mode .text-gray-900,
-body.dark-mode .text-gray-800,
-body.dark-mode h1, 
-body.dark-mode h2 {
+body.dark-mode .text-gray-800 {
     color: #f9fafb !important;
 }
 
-/* เปลี่ยนสีข้อความรายละเอียด (สีเทา) ให้มองเห็นชัดขึ้นในที่มืด */
+/* ข้อความคำอธิบาย (สีเทา) */
 body.dark-mode .text-gray-600,
 body.dark-mode .text-gray-500 {
     color: #9ca3af !important;
 }
 
-/* ======== แก้ไขการแสดงผลการ์ด X (Twitter) ในโหมดมืด ======== */
-
-/* เปลี่ยนพื้นหลังไอคอน X และป้าย "ใช้อินเทอร์เน็ต" เป็นสีเทาเข้มเพื่อให้ตัดกับอักษรสีขาว */
+/* ==========================================================================
+   3. Card Component Overrides (X / Twitter Card)
+   ========================================================================== */
+/* พื้นหลังป้ายและไอคอน */
 body.dark-mode .bg-gray-100 {
     background-color: #374151 !important;
 }
 
-/* แก้ไขสีป้าย "ใช้อินเทอร์เน็ต" ตอนชี้เมาส์ (Hover) */
-body.dark-mode .group:hover .group-hover\:bg-gray-200 {
-    background-color: #4b5563 !important;
-}
-
-/* แก้ไขสีข้อความ "โหลดคลิป X" ตอนชี้เมาส์ ไม่ให้กลายเป็นสีดำ */
-body.dark-mode .group:hover .group-hover\:text-black {
-    color: #e5e7eb !important; 
-}
-
-/* แก้ไขสีกรอบการ์ด X ตอนชี้เมาส์ ให้สว่างขึ้นแทนสีดำ */
-body.dark-mode .group:hover .group-hover\:border-black {
-    border-color: #6b7280 !important;
-}
-
-/* แก้ไขพื้นหลังกล่องไอคอน X ตอนชี้เมาส์ */
+/* สถานะเมื่อวางเมาส์ (Hover States) */
+body.dark-mode .group:hover .group-hover\:bg-gray-200,
 body.dark-mode .group:hover .group-hover\:bg-black {
     background-color: #4b5563 !important;
 }
 
-/* ======== แก้ไขสีกล่องข้อความและ Input ในโหมดมืด ======== */
+body.dark-mode .group:hover .group-hover\:text-black {
+    color: #e5e7eb !important;
+}
 
-/* 1. เปลี่ยนสี Placeholder (เช่น "วางลิงก์ TikTok ที่นี่...") ให้เป็นสีขาว/เทาสว่าง */
+body.dark-mode .group:hover .group-hover\:border-black {
+    border-color: #6b7280 !important;
+}
+
+/* ==========================================================================
+   4. Form Controls & Inputs (Dark Mode)
+   ========================================================================== */
+/* ข้อความตัวอย่าง (Placeholder) */
 body.dark-mode input::placeholder,
 body.dark-mode textarea::placeholder {
-    color: #d1d5db !important; /* สีเทาสว่าง */
-    opacity: 1 !important; /* บังคับไม่ให้เบราว์เซอร์ทำสีจางลงไปอีก */
+    color: #d1d5db !important;
+    opacity: 1 !important;
 }
 
-/* 2. เปลี่ยนสีตัวอักษรเวลาผู้ใช้พิมพ์ และปรับพื้นหลังกล่องกรอกข้อมูลให้กลมกลืน */
+/* กล่องพิมพ์ข้อมูล (Input / Textarea) */
 body.dark-mode input,
 body.dark-mode textarea {
-    color: #ffffff !important; /* สีตัวอักษรที่พิมพ์เป็นสีขาว */
-    background-color: #374151 !important; /* พื้นหลังกล่องสีเทาเข้ม */
-    border-color: #4b5563 !important; /* สีกรอบกล่อง */
+    color: #ffffff !important;
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
 }
 
-/* 3. เปลี่ยนสีข้อความคำอธิบาย (Label) และข้อความในกล่องอัปโหลดรูปภาพ */
+/* เมื่อเลือกกล่องข้อมูล (Focus) */
+body.dark-mode input:focus,
+body.dark-mode textarea:focus {
+    border-color: #60a5fa !important;
+    outline: none !important;
+}
+
+/* ป้ายกำกับ (Label & Text Description) */
 body.dark-mode label,
 body.dark-mode label .text-gray-700,
 body.dark-mode label .text-gray-500,
 body.dark-mode p.text-gray-500 {
-    color: #e5e7eb !important; /* เปลี่ยนข้อความแนะนำให้เป็นสีขาวสว่าง */
+    color: #e5e7eb !important;
 }
 
-/* 4. เมื่อคลิกที่กล่อง Input (Focus) ให้สีกรอบสว่างขึ้น */
-body.dark-mode input:focus,
-body.dark-mode textarea:focus {
-    border-color: #60a5fa !important; /* สีฟ้าน้ำทะเลอ่อนๆ ตอนคลิก */
-    outline: none !important;
-}
-
-/* ======== ปรับสีปุ่ม Header (กลับหน้าหลัก & ปุ่มสลับธีม) ในโหมดมืด ======== */
-
-/* เปลี่ยนพื้นหลังและสีกรอบของปุ่มทั้งสอง */
+/* ==========================================================================
+   5. Header Navigation & Theme Toggle Button
+   ========================================================================== */
 html.dark-mode header a,
 html.dark-mode header button#theme-toggle {
-    background-color: #1f2937 !important; /* สีเทาเข้ม */
-    border-color: #374151 !important;     /* สีกรอบ */
-    color: #e5e7eb !important;            /* สีตัวอักษร/ไอคอนเป็นสีขาวสว่าง */
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #e5e7eb !important;
 }
 
-/* เมื่อชี้เมาส์ (Hover) ที่ปุ่มในโหมดมืด */
 html.dark-mode header a:hover,
 html.dark-mode header button#theme-toggle:hover {
-    background-color: #374151 !important; /* ปรับพื้นหลังให้สว่างขึ้นเล็กน้อย */
+    background-color: #374151 !important;
     color: #ffffff !important;
 }
 
-/* ======== แก้ไขสีกล่องคำแนะนำ (Tip Banner) ในโหมดมืด ======== */
-
-/* ปรับสีพื้นหลังและกรอบของกล่องคำแนะนำในโหมดมืด */
+/* ==========================================================================
+   6. Tip Banner (กล่องคำแนะนำเคล็ดลับ)
+   ========================================================================== */
 html.dark-mode .bg-amber-50\/70,
 body.dark-mode .bg-amber-50\/70 {
-    background-color: rgba(55, 65, 81, 0.7) !important; /* พื้นหลังเทาเข้มโปร่งแสง */
-    border-color: #4b5563 !important;                 /* กรอบสีเทา */
-    color: #d1d5db !important;                        /* ตัวอักษรทั่วไปเป็นสีเทาสว่าง */
+    background-color: rgba(55, 65, 81, 0.7) !important;
+    border-color: #4b5563 !important;
+    color: #d1d5db !important;
 }
 
-/* ปรับสีไอคอนหลอดไฟ/เครื่องหมายในกล่องคำแนะนำ */
 html.dark-mode .bg-amber-100,
 body.dark-mode .bg-amber-100 {
     background-color: #4b5563 !important;
-    color: #fbbf24 !important; /* เปลี่ยนไอคอนเป็นสีเหลืองอำพันสว่าง */
+    color: #fbbf24 !important;
 }
 
-/* ปรับสีตัวอักษรเน้นย้ำ (ข้อความตัวหนา <strong class="text-gray-800">) ให้เป็นสีขาวสว่างอ่านง่าย */
 html.dark-mode .text-gray-800,
 body.dark-mode .text-gray-800 {
     color: #f9fafb !important;
 }
-/* ======== แก้ไขกล่อง Caption หน้า X และ TikTok ในโหมดมืด ======== */
 
-/* บังคับกล่องข้อความ (#x-text และ #tk-text) ให้เป็นพื้นหลังสีขาว ตัวอักษรสีดำใน Dark Mode */
+/* ==========================================================================
+   7. Specific Downloader Overrides (X & TikTok Caption Box)
+   ========================================================================== */
+/* บังคับกล่องข้อความคำอธิบายให้เป็นพื้นหลังขาว ตัวหนังสือดำ */
 html.dark-mode #x-text,
 html.dark-mode #tk-text,
 body.dark-mode #x-text,
 body.dark-mode #tk-text {
-    background-color: #ffffff !important; /* พื้นหลังกล่องสีขาว */
-    color: #111827 !important;           /* ตัวอักษรสีดำเข้ม */
-    border-color: #e5e7eb !important;     /* สีกรอบกล่องให้รับกับสีขาว */
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border-color: #e5e7eb !important;
 }
