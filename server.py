@@ -102,7 +102,7 @@ def get_x_video():
         return jsonify({'error': str(e)}), 500
 
 # ==========================================
-# API 1: ดึงข้อมูลและรายการความละเอียดทั้งหมด
+# API 1: ดึงข้อมูลและรายการความละเอียดทั้งหมดพร้อมขนาดไฟล์
 # ==========================================
 @app.route('/api/get_youtube_video', methods=['POST'])
 def get_youtube_video():
@@ -135,18 +135,38 @@ def get_youtube_video():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
+        duration = info.get('duration', 0)
         formats = info.get('formats', [])
+        
+        # ฟังก์ชันคำนวณขนาดไฟล์จาก Bitrate กรณี YouTube ไม่ส่งขนาดไฟล์ตรงๆ มาให้
+        def calc_size(fmt):
+            size = fmt.get('filesize') or fmt.get('filesize_approx') or 0
+            if not size and fmt.get('tbr') and duration:
+                size = int((fmt.get('tbr') * 1000 / 8) * duration)
+            return size
+
+        # 1. หาขนาดไฟล์เสียงที่ดีที่สุด (Best Audio Size)
+        audio_formats = [f for f in formats if f.get('vcodec') == 'none' and f.get('acodec') != 'none']
+        best_audio_size = 0
+        if audio_formats:
+            best_audio = sorted(audio_formats, key=lambda x: x.get('tbr') or x.get('abr') or 0, reverse=True)[0]
+            best_audio_size = calc_size(best_audio)
+
         seen_heights = set()
         video_options = []
 
-        # ดึงความละเอียดทั้งหมดออกมา (เดี๋ยว FFmpeg จะจัดการเรื่องเสียงเอง)
+        # 2. รวมขนาดภาพ + ขนาดเสียงเข้าด้วยกัน
         for f in formats:
             h = f.get('height')
             if h and h >= 144 and h not in seen_heights and f.get('vcodec') != 'none':
                 seen_heights.add(h)
+                v_size = calc_size(f)
+                total_size = (v_size + best_audio_size) if v_size > 0 else 0
+                
                 video_options.append({
                     'resolution': f"{h}p",
-                    'height': h
+                    'height': h,
+                    'filesize': total_size
                 })
 
         video_options = sorted(video_options, key=lambda x: x['height'], reverse=True)
@@ -155,75 +175,13 @@ def get_youtube_video():
             'title': info.get('title', 'YouTube Video'),
             'author': info.get('uploader') or info.get('channel', 'YouTube Creator'),
             'thumbnail': info.get('thumbnail', ''),
-            'duration': info.get('duration', 0),
+            'duration': duration,
             'video_options': video_options,
+            'audio_filesize': best_audio_size,
             'original_url': url
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        if cookie_file and os.path.exists(cookie_file):
-            os.unlink(cookie_file)
-
-
-# ==========================================
-# API 2: ระบบดาวน์โหลดและประกอบร่างไฟล์ (FFmpeg)
-# ==========================================
-@app.route('/api/download_local', methods=['GET'])
-def download_local():
-    url = request.args.get('url')
-    res = request.args.get('res', '1080')
-    is_audio = request.args.get('audio') == 'true'
-
-    cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '')
-    cookie_file = ''
-    if cookie_content:
-        tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt')
-        tf.write(cookie_content)
-        tf.close()
-        cookie_file = tf.name
-
-    # สร้างโฟลเดอร์ downloads ไว้เก็บไฟล์ชั่วคราว
-    download_dir = os.path.join(app.root_path, 'downloads')
-    os.makedirs(download_dir, exist_ok=True)
-    
-    # ล้างไฟล์วิดีโอเก่าๆ ทิ้งเพื่อไม่ให้รกเครื่อง
-    for f in os.listdir(download_dir):
-        try: os.remove(os.path.join(download_dir, f))
-        except: pass
-
-    outtmpl = os.path.join(download_dir, '%(title)s.%(ext)s')
-
-    if is_audio:
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': outtmpl,
-            'cookiefile': cookie_file if cookie_file else None,
-            'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
-            'quiet': True,
-        }
-    else:
-        ydl_opts = {
-            # สั่งโหลดภาพความละเอียดที่เลือก + เสียงที่ดีที่สุด แล้วรวมเป็น mp4
-            'format': f'bestvideo[height<={res}]+bestaudio/best',
-            'outtmpl': outtmpl,
-            'merge_output_format': 'mp4',
-            'cookiefile': cookie_file if cookie_file else None,
-            'quiet': True,
-        }
-
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
-            if is_audio:
-                filename = filename.rsplit('.', 1)[0] + '.mp3'
-            else:
-                filename = filename.rsplit('.', 1)[0] + '.mp4'
-                
-        return send_file(filename, as_attachment=True)
-    except Exception as e:
-        return f"เกิดข้อผิดพลาด: {str(e)}", 500
     finally:
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)

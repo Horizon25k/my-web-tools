@@ -6,16 +6,24 @@
     <meta name="referrer" content="no-referrer">
     <title>YouTube Video Downloader</title>
     
-    <!-- ป้องกันแสงสีขาววูบวาบ (FOUC Mitigation) -->
+    <!-- ระบบจัดการ Dark/Light Mode เพื่อป้องกันแสงสีขาววูบวาบ -->
     <script>
         (function() {
-            if (localStorage.getItem('theme') === 'dark') {
-                document.documentElement.classList.add('dark-mode');
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
         })();
     </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -101,7 +109,7 @@
                 <!-- Detail & Download Buttons -->
                 <div class="w-full sm:w-1/2 flex flex-col justify-between self-stretch">
                     <div>
-                        <!-- Author Info & Cookie Badge -->
+                        <!-- Author Info -->
                         <div class="flex items-center justify-between gap-2 mb-3">
                             <div class="flex items-center gap-2 min-w-0">
                                 <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-600 text-white text-xs font-bold shrink-0">YT</span>
@@ -116,10 +124,10 @@
                     <!-- Actions Container -->
                     <div id="yt-download-buttons" class="mt-auto flex flex-col gap-3 pt-2">
                         
-                        <!-- Dropdown เลือกความละเอียด MP4 (ตกแต่งให้เข้ากับ Dark Mode) -->
+                        <!-- Dropdown เลือกความละเอียด MP4 ตกแต่งสไตล์มินิมอล -->
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">เลือกความละเอียดวิดีโอ (MP4):</label>
-                            <select id="yt-quality-select" onchange="updateMp4DownloadLink()" class="w-full p-3 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-gray-100 text-xs sm:text-sm font-medium rounded-xl border border-gray-200 dark:border-slate-700 focus:outline-none focus:border-red-500/50">
+                            <select id="yt-quality-select" onchange="updateMp4DownloadLink()" class="w-full p-3.5 bg-gray-50/80 dark:bg-slate-800/90 text-gray-900 dark:text-gray-100 text-xs sm:text-sm font-semibold rounded-2xl border border-gray-200/80 dark:border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all cursor-pointer shadow-sm">
                             </select>
                         </div>
 
@@ -132,7 +140,7 @@
                                 ดาวน์โหลด MP4
                             </span>
                             <span id="yt-mp4-badge" class="bg-white/20 text-white px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-wide">
-                                MP4
+                                --
                             </span>
                         </a>
 
@@ -144,8 +152,8 @@
                                 </svg>
                                 ดาวน์โหลด MP3 (ไฟล์เสียง)
                             </span>
-                            <span class="bg-white/20 text-white px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-wide">
-                                MP3
+                            <span id="yt-mp3-badge" class="bg-white/20 text-white px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-wide">
+                                --
                             </span>
                         </a>
 
@@ -171,11 +179,11 @@
         let originalVideoUrl = "";
 
         function formatBytes(bytes) {
-            if (!bytes || bytes === 0) return '';
+            if (!bytes || bytes <= 0) return '';
             const k = 1024;
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
         function formatDuration(seconds) {
@@ -217,23 +225,35 @@
                 document.getElementById('yt-thumbnail').src = data.thumbnail || '';
                 document.getElementById('yt-author').textContent = data.author || 'YouTube';
                 document.getElementById('yt-title').textContent = data.title;
-                originalVideoUrl = data.original_url; // เก็บ URL ต้นฉบับไว้
+                document.getElementById('yt-duration').textContent = formatDuration(data.duration);
+                originalVideoUrl = data.original_url;
 
                 currentVideoOptions = data.video_options || [];
                 const qualitySelect = document.getElementById('yt-quality-select');
                 qualitySelect.innerHTML = '';
 
+                // จัดรูปแบบข้อความใน Dropdown ให้ดูสะอาด สวยงาม และมินิมอล
                 currentVideoOptions.forEach((opt, index) => {
                     const option = document.createElement('option');
                     option.value = index;
-                    option.textContent = `${opt.resolution} `;
+                    const sizeFormatted = formatBytes(opt.filesize);
+                    const sizeText = sizeFormatted ? `  •  ${sizeFormatted}` : '';
+                    option.textContent = `${opt.resolution}${sizeText}`;
                     qualitySelect.appendChild(option);
                 });
 
+                // อัปเดตปุ่ม MP4
                 updateMp4DownloadLink();
 
+                // อัปเดตปุ่ม MP3 ให้แสดงขนาดไฟล์อย่างเดียว
                 const mp3Btn = document.getElementById('yt-mp3-btn');
+                const mp3Badge = document.getElementById('yt-mp3-badge');
                 mp3Btn.href = `/api/download_local?url=${encodeURIComponent(originalVideoUrl)}&audio=true`;
+                
+                if (mp3Badge) {
+                    const audioSize = formatBytes(data.audio_filesize);
+                    mp3Badge.textContent = audioSize ? audioSize : 'ไม่ระบุขนาด';
+                }
                 mp3Btn.classList.remove('hidden');
 
                 resultDiv.classList.remove('hidden');
@@ -255,12 +275,25 @@
 
             const selectedOpt = currentVideoOptions[select.value];
             if (selectedOpt) {
-                // ชี้ไปที่ระบบดาวน์โหลดพร้อมบอกความละเอียด
                 mp4Btn.href = `/api/download_local?url=${encodeURIComponent(originalVideoUrl)}&res=${selectedOpt.height}`;
-                mp4Badge.textContent = `${selectedOpt.resolution}`;
+                const sizeFormatted = formatBytes(selectedOpt.filesize);
+                mp4Badge.textContent = sizeFormatted ? sizeFormatted : 'ไม่ระบุขนาด';
             }
         }
-        
+
+        // ==========================================
+        // ระบบสลับ Dark / Light Mode
+        // ==========================================
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
     </script>
     <script src="/static/js/theme.js"></script>
 </body>
