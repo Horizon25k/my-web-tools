@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory, Response, send_file
 import os
 import tempfile
+import base64
 import yt_dlp
 import urllib.request
 from dotenv import load_dotenv
@@ -102,16 +103,26 @@ def get_x_video():
         return jsonify({'error': str(e)}), 500
 
 # ==========================================
-# ฟังก์ชันช่วยเตรียม Cookie (แก้ไขปัญหา Newline บน Render)
+# ฟังก์ชันช่วยเตรียม Cookie (รองรับแบบข้อความธรรมดา และ Base64)
 # ==========================================
 def create_temp_cookie_file():
     cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '') or os.environ.get('COOKIE_CONTENT', '')
     if not cookie_content or len(cookie_content.strip()) <= 20:
         return None
 
-    # แปลงตัวอักษร '\n' ที่ Render แปลงผิด ให้กลับเป็นบรรทัดใหม่จริง
+    # ถอดรหัสกรณีส่งมาเป็นข้อความ Base64 (ป้องกันฟอร์แมต Cookie พังบน Cloud)
+    try:
+        decoded = base64.b64decode(cookie_content.strip()).decode('utf-8')
+        if 'youtube.com' in decoded or '# Netscape' in decoded:
+            cookie_content = decoded
+    except Exception:
+        pass
+
+    # แปลงตัวอักษร '\n' และ '\t' ที่ Render แปลงผิด ให้กลับเป็นค่าเดิม
     if '\\n' in cookie_content:
         cookie_content = cookie_content.replace('\\n', '\n')
+    if '\\t' in cookie_content:
+        cookie_content = cookie_content.replace('\\t', '\t')
 
     tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt', encoding='utf-8')
     tf.write(cookie_content)
@@ -120,7 +131,7 @@ def create_temp_cookie_file():
 
 
 # ==========================================
-# 1. API ดึงข้อมูลวิดีโอ
+# 1. API ดึงข้อมูลวิดีโอ YouTube
 # ==========================================
 @app.route('/api/get_youtube_video', methods=['POST'])
 def get_youtube_video():
@@ -146,8 +157,7 @@ def get_youtube_video():
             'format': 'all',
             'extractor_args': {
                 'youtube': {
-                    # ใช้ mweb และ android บน Render เพื่อหลบ Bot Verification บน Cloud IP
-                    'player_client': ['mweb', 'android', 'ios']
+                    'player_client': ['tv_embedded', 'mweb', 'android']
                 }
             }
         }
@@ -210,7 +220,7 @@ def download_local():
 
     extractor_args = {
         'youtube': {
-            'player_client': ['mweb', 'android', 'ios']
+            'player_client': ['tv_embedded', 'mweb', 'android']
         }
     }
 
