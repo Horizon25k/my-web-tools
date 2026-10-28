@@ -220,7 +220,7 @@ def download_local():
 
     extractor_args = {
         'youtube': {
-            'player_client': ['ios', 'android', 'mweb']
+            'player_client': ['tv_embedded', 'mweb', 'android']
         }
     }
 
