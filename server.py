@@ -102,25 +102,7 @@ def get_x_video():
         return jsonify({'error': str(e)}), 500
 
 # ==========================================
-# ฟังก์ชันช่วยเตรียม Cookie (แก้ไขปัญหา Newline บน Render)
-# ==========================================
-def create_temp_cookie_file():
-    cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '') or os.environ.get('COOKIE_CONTENT', '')
-    if not cookie_content or len(cookie_content.strip()) <= 20:
-        return None
-
-    # แปลงตัวอักษร '\n' ที่ Render แปลงผิด ให้กลับเป็นบรรทัดใหม่จริง
-    if '\\n' in cookie_content:
-        cookie_content = cookie_content.replace('\\n', '\n')
-
-    tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt', encoding='utf-8')
-    tf.write(cookie_content)
-    tf.close()
-    return tf.name
-
-
-# ==========================================
-# 1. API ดึงข้อมูลวิดีโอ
+# API 1: ดึงข้อมูลและรายการความละเอียดทั้งหมด
 # ==========================================
 @app.route('/api/get_youtube_video', methods=['POST'])
 def get_youtube_video():
@@ -129,27 +111,25 @@ def get_youtube_video():
 
     if not url:
         return jsonify({'error': 'กรุณาระบุ URL'}), 400
-
+    
     if '?si=' in url: url = url.split('?si=')[0]
     if '&si=' in url: url = url.split('&si=')[0]
 
-    cookie_file = create_temp_cookie_file()
-    if not cookie_file:
-        return jsonify({'error': 'กรุณาตั้งค่า YOUTUBE_COOKIE_CONTENT ใน Render Environment'}), 400
+    cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '')
+    if not cookie_content or len(cookie_content.strip()) <= 20:
+        return jsonify({'error': 'กรุณาตั้งค่า YOUTUBE_COOKIE_CONTENT ในไฟล์ .env'}), 400
 
+    cookie_file = ''
     try:
+        tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt', encoding='utf-8')
+        tf.write(cookie_content)
+        tf.close()
+        cookie_file = tf.name
+
         ydl_opts = {
             'cookiefile': cookie_file,
-            'quiet': True,
-            'no_warnings': True,
-            'skip_download': True,
-            'format': 'all',
-            'extractor_args': {
-                'youtube': {
-                    # ใช้ mweb และ android บน Render เพื่อหลบ Bot Verification บน Cloud IP
-                    'player_client': ['mweb', 'android', 'ios']
-                }
-            }
+            'quiet': True, 'no_warnings': True, 'skip_download': True,
+            'format': 'all'
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -159,6 +139,7 @@ def get_youtube_video():
         seen_heights = set()
         video_options = []
 
+        # ดึงความละเอียดทั้งหมดออกมา (เดี๋ยว FFmpeg จะจัดการเรื่องเสียงเอง)
         for f in formats:
             h = f.get('height')
             if h and h >= 144 and h not in seen_heights and f.get('vcodec') != 'none':
@@ -179,14 +160,14 @@ def get_youtube_video():
             'original_url': url
         })
     except Exception as e:
-        return jsonify({'error': f"ไม่สามารถดึงข้อมูลได้: {str(e)}"}), 500
+        return jsonify({'error': str(e)}), 500
     finally:
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
 
 
 # ==========================================
-# 2. API ดาวน์โหลดและประกอบไฟล์ด้วย FFmpeg
+# API 2: ระบบดาวน์โหลดและประกอบร่างไฟล์ (FFmpeg)
 # ==========================================
 @app.route('/api/download_local', methods=['GET'])
 def download_local():
@@ -194,42 +175,40 @@ def download_local():
     res = request.args.get('res', '1080')
     is_audio = request.args.get('audio') == 'true'
 
-    if not url:
-        return "กรุณาระบุ URL", 400
+    cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '')
+    cookie_file = ''
+    if cookie_content:
+        tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt')
+        tf.write(cookie_content)
+        tf.close()
+        cookie_file = tf.name
 
-    cookie_file = create_temp_cookie_file()
-
+    # สร้างโฟลเดอร์ downloads ไว้เก็บไฟล์ชั่วคราว
     download_dir = os.path.join(app.root_path, 'downloads')
     os.makedirs(download_dir, exist_ok=True)
     
+    # ล้างไฟล์วิดีโอเก่าๆ ทิ้งเพื่อไม่ให้รกเครื่อง
     for f in os.listdir(download_dir):
         try: os.remove(os.path.join(download_dir, f))
         except: pass
 
     outtmpl = os.path.join(download_dir, '%(title)s.%(ext)s')
 
-    extractor_args = {
-        'youtube': {
-            'player_client': ['mweb', 'android', 'ios']
-        }
-    }
-
     if is_audio:
         ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': outtmpl,
-            'cookiefile': cookie_file,
-            'extractor_args': extractor_args,
+            'cookiefile': cookie_file if cookie_file else None,
             'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
             'quiet': True,
         }
     else:
         ydl_opts = {
+            # สั่งโหลดภาพความละเอียดที่เลือก + เสียงที่ดีที่สุด แล้วรวมเป็น mp4
             'format': f'bestvideo[height<={res}]+bestaudio/best',
             'outtmpl': outtmpl,
             'merge_output_format': 'mp4',
-            'cookiefile': cookie_file,
-            'extractor_args': extractor_args,
+            'cookiefile': cookie_file if cookie_file else None,
             'quiet': True,
         }
 
