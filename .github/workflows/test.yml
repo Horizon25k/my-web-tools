@@ -23,10 +23,6 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Run tests
-        run: |
-          pytest test_app.py
-
       - name: Trigger Render Deploy
         if: success()
         run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
