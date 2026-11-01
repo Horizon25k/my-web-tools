@@ -12,12 +12,20 @@ app = Flask(__name__)
 CORS(app) # อนุญาตให้หน้าเว็บ HTML เรียกใช้ API ได้
 
 # ==========================================
+# ฟังก์ชันช่วยเช็กสภาพแวดล้อม (Localhost vs Render)
+# ==========================================
+def is_local_env():
+    # Render จะสร้างตัวแปร RENDER=true ให้อัตโนมัติ ถ้าไม่มีตัวแปรนี้แสดงว่าเป็น Localhost
+    return os.environ.get('RENDER') is None
+
+# ==========================================
 # 1. Page Routes (หน้าเว็บหลักและเครื่องมือต่างๆ)
 # ==========================================
 
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('index.html')
+    # ส่งค่า is_local ไปให้ Jinja2 Template ใน index.html ใช้ซ่อน/แสดง การ์ดเครื่องมือ
+    return render_template('index.html', is_local=is_local_env())
 
 @app.route('/x-downloader.html', methods=['GET'])
 def x_downloader_page():
@@ -37,6 +45,9 @@ def pdf_merge_page():
 
 @app.route('/youtube-downloader.html', methods=['GET'])
 def youtube_downloader_page():
+    # หากรันอยู่บน Render ให้บล็อกหน้านี้และตอบกลับเป็น 404 Not Found
+    if not is_local_env():
+        return "404 Not Found", 404
     return render_template('youtube-downloader.html')
 
 @app.route('/public/<path:filename>', methods=['GET'])
@@ -51,7 +62,6 @@ def create_temp_cookie_file():
     if not cookie_content or len(cookie_content.strip()) <= 20:
         return None
 
-    # ถอดรหัสกรณีส่งมาเป็นข้อความ Base64
     try:
         decoded = base64.b64decode(cookie_content.strip()).decode('utf-8')
         if 'youtube.com' in decoded or '# Netscape' in decoded:
@@ -59,7 +69,6 @@ def create_temp_cookie_file():
     except Exception:
         pass
 
-    # แปลงตัวอักษร '\n' และ '\t' ให้กลับเป็นบรรทัดจริง
     if '\\n' in cookie_content:
         cookie_content = cookie_content.replace('\\n', '\n')
     if '\\t' in cookie_content:
@@ -130,10 +139,13 @@ def get_x_video():
         return jsonify({'error': str(e)}), 500
 
 # ==========================================
-# API 1: ดึงข้อมูลและรายการความละเอียดทั้งหมดพร้อมขนาดไฟล์
+# API 1: ดึงข้อมูลวิดีโอ YouTube (เปิดเฉพาะ Localhost)
 # ==========================================
 @app.route('/api/get_youtube_video', methods=['POST'])
 def get_youtube_video():
+    if not is_local_env():
+        return jsonify({'error': 'ฟีเจอร์นี้เปิดให้ใช้งานเฉพาะใน Localhost เท่านั้น'}), 403
+
     data = request.json or {}
     url = data.get('url', '').strip()
 
@@ -145,7 +157,7 @@ def get_youtube_video():
 
     cookie_file = create_temp_cookie_file()
     if not cookie_file:
-        return jsonify({'error': 'กรุณาตั้งค่า YOUTUBE_COOKIE_CONTENT ในไฟล์ .env หรือ Render Environment'}), 400
+        return jsonify({'error': 'กรุณาตั้งค่า YOUTUBE_COOKIE_CONTENT ในไฟล์ .env'}), 400
 
     try:
         ydl_opts = {
@@ -165,14 +177,12 @@ def get_youtube_video():
         duration = info.get('duration', 0)
         formats = info.get('formats', [])
         
-        # คำนวณขนาดไฟล์จาก Bitrate กรณี YouTube ไม่ส่งขนาดตรงๆ มาให้
         def calc_size(fmt):
             size = fmt.get('filesize') or fmt.get('filesize_approx') or 0
             if not size and fmt.get('tbr') and duration:
                 size = int((fmt.get('tbr') * 1000 / 8) * duration)
             return size
 
-        # 1. หาขนาดไฟล์เสียงที่ดีที่สุด (Best Audio Size)
         audio_formats = [f for f in formats if f.get('vcodec') == 'none' and f.get('acodec') != 'none']
         best_audio_size = 0
         if audio_formats:
@@ -182,7 +192,6 @@ def get_youtube_video():
         seen_heights = set()
         video_options = []
 
-        # 2. รวมขนาดภาพ + ขนาดเสียงเข้าด้วยกัน
         for f in formats:
             h = f.get('height')
             if h and h >= 144 and h not in seen_heights and f.get('vcodec') != 'none':
@@ -215,10 +224,13 @@ def get_youtube_video():
 
 
 # ==========================================
-# API 2: ระบบดาวน์โหลดและประกอบไฟล์ด้วย FFmpeg
+# API 2: ดาวน์โหลดไฟล์ YouTube (เปิดเฉพาะ Localhost)
 # ==========================================
 @app.route('/api/download_local', methods=['GET'])
 def download_local():
+    if not is_local_env():
+        return "ฟีเจอร์นี้เปิดให้ใช้งานเฉพาะใน Localhost เท่านั้น", 403
+
     url = request.args.get('url')
     res = request.args.get('res', '1080')
     is_audio = request.args.get('audio') == 'true'
@@ -271,7 +283,6 @@ def download_local():
             else:
                 filename = filename.rsplit('.', 1)[0] + '.mp4'
                 
-        # ลบไฟล์ชั่วคราวออกจากเซิร์ฟเวอร์ทันทีหลังจากผู้ใช้ดาวน์โหลดสำเร็จ
         @after_this_request
         def remove_file(response):
             try:

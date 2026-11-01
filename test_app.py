@@ -12,12 +12,11 @@ def test_home_page(client):
     response = client.get('/')
     assert response.status_code == 200
 
-# เทสต์การเข้าถึงหน้าเครื่องมือหลัก (รวม PDF Merge แล้ว)
+# เทสต์การเข้าถึงหน้าเครื่องมือหลัก
 def test_tools_pages(client):
     assert client.get('/webp_pdf.html').status_code == 200
     assert client.get('/x-downloader.html').status_code == 200
     assert client.get('/tiktok-downloader.html').status_code == 200
-    assert client.get('/youtube-downloader.html').status_code == 200
     assert client.get('/pdf_merge.html').status_code == 200
 
 # เทสต์การเข้าถึงโฟลเดอร์ public (โปรเจกต์ Craft)
@@ -32,8 +31,19 @@ def test_force_download_api_no_url(client):
         assert response.status_code == 400
 
 # ==================================================
-# Test Cases สำหรับ YouTube Downloader
+# Test Cases สำหรับ YouTube Downloader (Local VS Render)
 # ==================================================
+def test_youtube_downloader_local_access(client):
+    # ทดสอบกรณีรันบน Localhost (เปิดให้เข้าถึงได้ปกติ)
+    response = client.get('/youtube-downloader.html')
+    assert response.status_code == 200
+
+def test_youtube_downloader_render_blocked(client, monkeypatch):
+    # จำลองว่ารันอยู่บน Render (บล็อกการเข้าถึง ตอบกลับ 404)
+    monkeypatch.setenv('RENDER', 'true')
+    response = client.get('/youtube-downloader.html')
+    assert response.status_code == 404
+
 def test_get_youtube_video_api_no_url(client):
     response = client.post('/api/get_youtube_video', json={})
     assert response.status_code == 400
@@ -41,4 +51,4 @@ def test_get_youtube_video_api_no_url(client):
 
 def test_download_local_no_url(client):
     response = client.get('/api/download_local')
-    assert response.status_code == 400  # เปลี่ยนจาก 500 เป็น 400 ให้ตรงกับ server.py
+    assert response.status_code == 400
