@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory, Response, send_file
+from flask import Flask, request, jsonify, render_template, send_from_directory, Response, send_file, after_this_request
 import os
 import tempfile
+import base64
 import yt_dlp
 import urllib.request
 from dotenv import load_dotenv
@@ -41,6 +42,33 @@ def youtube_downloader_page():
 @app.route('/public/<path:filename>', methods=['GET'])
 def serve_public_files(filename):
     return send_from_directory('public', filename)
+
+# ==========================================
+# ฟังก์ชันช่วยเตรียม Cookie (รองรับ Base64 และ Newline บน Render)
+# ==========================================
+def create_temp_cookie_file():
+    cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '') or os.environ.get('COOKIE_CONTENT', '')
+    if not cookie_content or len(cookie_content.strip()) <= 20:
+        return None
+
+    # ถอดรหัสกรณีส่งมาเป็นข้อความ Base64
+    try:
+        decoded = base64.b64decode(cookie_content.strip()).decode('utf-8')
+        if 'youtube.com' in decoded or '# Netscape' in decoded:
+            cookie_content = decoded
+    except Exception:
+        pass
+
+    # แปลงตัวอักษร '\n' และ '\t' ให้กลับเป็นบรรทัดจริง
+    if '\\n' in cookie_content:
+        cookie_content = cookie_content.replace('\\n', '\n')
+    if '\\t' in cookie_content:
+        cookie_content = cookie_content.replace('\\t', '\t')
+
+    tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt', encoding='utf-8')
+    tf.write(cookie_content)
+    tf.close()
+    return tf.name
 
 # ==========================================
 # 2. API Endpoints (ระบบเบื้องหลัง)
@@ -115,21 +143,20 @@ def get_youtube_video():
     if '?si=' in url: url = url.split('?si=')[0]
     if '&si=' in url: url = url.split('&si=')[0]
 
-    cookie_content = os.environ.get('YOUTUBE_COOKIE_CONTENT', '')
-    if not cookie_content or len(cookie_content.strip()) <= 20:
-        return jsonify({'error': 'กรุณาตั้งค่า YOUTUBE_COOKIE_CONTENT ในไฟล์ .env'}), 400
+    cookie_file = create_temp_cookie_file()
+    if not cookie_file:
+        return jsonify({'error': 'กรุณาตั้งค่า YOUTUBE_COOKIE_CONTENT ในไฟล์ .env หรือ Render Environment'}), 400
 
-    cookie_file = ''
     try:
-        tf = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.txt', encoding='utf-8')
-        tf.write(cookie_content)
-        tf.close()
-        cookie_file = tf.name
-
         ydl_opts = {
             'cookiefile': cookie_file,
             'quiet': True, 'no_warnings': True, 'skip_download': True,
-            'format': 'all'
+            'format': 'all',
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['tv_embedded', 'mweb', 'android']
+                }
+            }
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -138,7 +165,7 @@ def get_youtube_video():
         duration = info.get('duration', 0)
         formats = info.get('formats', [])
         
-        # ฟังก์ชันคำนวณขนาดไฟล์จาก Bitrate กรณี YouTube ไม่ส่งขนาดไฟล์ตรงๆ มาให้
+        # คำนวณขนาดไฟล์จาก Bitrate กรณี YouTube ไม่ส่งขนาดตรงๆ มาให้
         def calc_size(fmt):
             size = fmt.get('filesize') or fmt.get('filesize_approx') or 0
             if not size and fmt.get('tbr') and duration:
@@ -185,6 +212,86 @@ def get_youtube_video():
     finally:
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
+
+
+# ==========================================
+# API 2: ระบบดาวน์โหลดและประกอบไฟล์ด้วย FFmpeg
+# ==========================================
+@app.route('/api/download_local', methods=['GET'])
+def download_local():
+    url = request.args.get('url')
+    res = request.args.get('res', '1080')
+    is_audio = request.args.get('audio') == 'true'
+
+    if not url:
+        return "กรุณาระบุ URL", 400
+
+    cookie_file = create_temp_cookie_file()
+
+    download_dir = os.path.join(app.root_path, 'downloads')
+    os.makedirs(download_dir, exist_ok=True)
+    
+    for f in os.listdir(download_dir):
+        try: os.remove(os.path.join(download_dir, f))
+        except: pass
+
+    outtmpl = os.path.join(download_dir, '%(title)s.%(ext)s')
+
+    extractor_args = {
+        'youtube': {
+            'player_client': ['tv_embedded', 'mweb', 'android']
+        }
+    }
+
+    if is_audio:
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': outtmpl,
+            'cookiefile': cookie_file,
+            'extractor_args': extractor_args,
+            'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
+            'quiet': True,
+        }
+    else:
+        ydl_opts = {
+            'format': f'bestvideo[height<={res}]+bestaudio/best',
+            'outtmpl': outtmpl,
+            'merge_output_format': 'mp4',
+            'cookiefile': cookie_file,
+            'extractor_args': extractor_args,
+            'quiet': True,
+        }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+            if is_audio:
+                filename = filename.rsplit('.', 1)[0] + '.mp3'
+            else:
+                filename = filename.rsplit('.', 1)[0] + '.mp4'
+                
+        # ลบไฟล์ชั่วคราวออกจากเซิร์ฟเวอร์ทันทีหลังจากผู้ใช้ดาวน์โหลดสำเร็จ
+        @after_this_request
+        def remove_file(response):
+            try:
+                if os.path.exists(filename):
+                    os.remove(filename)
+            except Exception as e:
+                app.logger.error(f"Error removing temp file: {e}")
+            return response
+
+        return send_file(
+            filename,
+            as_attachment=True,
+            download_name=os.path.basename(filename)
+        )
+    except Exception as e:
+        return f"เกิดข้อผิดพลาด: {str(e)}", 500
+    finally:
+        if cookie_file and os.path.exists(cookie_file):
+            os.unlink(cookie_file)
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

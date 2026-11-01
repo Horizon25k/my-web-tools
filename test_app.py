@@ -18,7 +18,7 @@ def test_tools_pages(client):
     assert client.get('/x-downloader.html').status_code == 200
     assert client.get('/tiktok-downloader.html').status_code == 200
     assert client.get('/youtube-downloader.html').status_code == 200
-    assert client.get('/pdf_merge.html').status_code == 200  # เช็กหน้า รวมไฟล์ PDF
+    assert client.get('/pdf_merge.html').status_code == 200
 
 # เทสต์การเข้าถึงโฟลเดอร์ public (โปรเจกต์ Craft)
 def test_public_craft_pages(client):
@@ -41,4 +41,4 @@ def test_get_youtube_video_api_no_url(client):
 
 def test_download_local_no_url(client):
     response = client.get('/api/download_local')
-    assert response.status_code == 500
+    assert response.status_code == 400  # เปลี่ยนจาก 500 เป็น 400 ให้ตรงกับ server.py
