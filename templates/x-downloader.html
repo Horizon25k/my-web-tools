@@ -6,27 +6,34 @@
     <meta name="referrer" content="no-referrer">
     <title>X Video Downloader</title>
     
-    <!-- ป้องกันแสงสีขาววูบวาบ (FOUC Mitigation) -->
+    <!-- ป้องกันแสงสีขาววูบวาบ (FOUC Mitigation - ซิงก์กับ theme.js) -->
     <script>
         (function() {
             if (localStorage.getItem('theme') === 'dark') {
                 document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
             }
         })();
     </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '.dark-mode'],
+        }
+    </script>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen antialiased selection:bg-black selection:text-white transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col justify-between antialiased selection:bg-black selection:text-white transition-colors duration-300">
 
     <!-- Top Navigation Bar -->
-    <header class="max-w-4xl mx-auto pt-6 px-4 sm:px-6 flex items-center justify-between">
-        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white/80 hover:bg-white border border-gray-200/80 rounded-full shadow-sm hover:shadow transition-all duration-200 backdrop-blur-md group">
+    <header class="max-w-4xl mx-auto pt-6 px-4 sm:px-6 flex items-center justify-between w-full">
+        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-900 border border-gray-200/80 dark:border-slate-800 rounded-full shadow-sm hover:shadow transition-all duration-200 backdrop-blur-md group">
             <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
@@ -34,33 +41,33 @@
         </a>
 
         <!-- ปุ่มสลับธีม -->
-        <button id="theme-toggle" class="flex items-center justify-center w-10 h-10 bg-white/80 border border-gray-200/80 rounded-full shadow-sm text-gray-600 hover:text-black hover:bg-white transition-all duration-200 backdrop-blur-md focus:outline-none" aria-label="Toggle Dark Mode">
+        <button id="theme-toggle" class="flex items-center justify-center w-10 h-10 bg-white/80 dark:bg-slate-900/80 border border-gray-200/80 dark:border-slate-800 rounded-full shadow-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 transition-all duration-200 backdrop-blur-md focus:outline-none" aria-label="Toggle Dark Mode">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
             </svg>
         </button>
     </header>
 
-    <!-- Main Container (ปรับขยายจาก max-w-2xl เป็น max-w-3xl) -->
-    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+    <!-- Main Container -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-10 pb-16 w-full">
         
         <!-- Hero Title -->
         <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-14 h-14 bg-black text-white rounded-2xl mb-4 shadow-lg shadow-black/10">
+            <div class="inline-flex items-center justify-center w-14 h-14 bg-black dark:bg-white text-white dark:text-black rounded-2xl mb-4 shadow-lg shadow-black/10 transition-colors">
                 <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
                 </svg>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
                 X Video Downloader
             </h1>
-            <p class="text-sm sm:text-base text-gray-500 max-w-md mx-auto">
+            <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                 ดาวน์โหลดวิดีโอจาก X (Twitter) คุณภาพสูงได้ทันที ไม่ติดลายน้ำ
             </p>
         </div>
         
         <!-- Input Card -->
-        <div class="bg-white p-3 sm:p-4 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 transition-all">
+        <div class="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-800 transition-all">
             <div class="relative flex items-center">
                 <div class="absolute left-4 text-gray-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,10 +75,10 @@
                     </svg>
                 </div>
                 <input type="text" id="x-url-input" 
-                    class="w-full pl-11 pr-28 py-3.5 bg-gray-50/70 text-gray-900 rounded-2xl border border-transparent focus:border-black/20 focus:bg-white focus:ring-0 text-sm transition-all placeholder:text-gray-400 font-medium" 
+                    class="w-full pl-11 pr-28 py-3.5 bg-gray-50/70 dark:bg-slate-800/80 text-gray-900 dark:text-white rounded-2xl border border-transparent focus:border-black/20 dark:focus:border-white/20 focus:bg-white dark:focus:bg-slate-800 focus:ring-0 text-sm transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500 font-medium" 
                     placeholder="วางลิงก์โพสต์ X ที่นี่...">
                 <button onclick="fetchXVideo()" 
-                    class="absolute right-1.5 bg-black hover:bg-gray-800 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+                    class="absolute right-1.5 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5">
                     <span>ดึงข้อมูล</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
@@ -82,18 +89,18 @@
 
         <!-- Status Loading -->
         <div id="x-loading" class="hidden text-center py-12">
-            <div class="inline-flex items-center justify-center p-3 bg-white rounded-full shadow-md border border-gray-100 mb-3">
-                <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 border-t-black"></div>
+            <div class="inline-flex items-center justify-center p-3 bg-white dark:bg-slate-900 rounded-full shadow-md border border-gray-100 dark:border-slate-800 mb-3">
+                <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-200 dark:border-slate-700 border-t-black dark:border-t-white"></div>
             </div>
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider" id="loading-text">กำลังประมวลผลวิดีโอ...</p>
         </div>
 
         <!-- Result Display -->
-        <div id="x-result" class="hidden mt-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transition-all">
+        <div id="x-result" class="hidden mt-6 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-800 transition-all">
             <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-stretch">
                 
-                <!-- Thumbnail (ขยายขนาดรูปให้ใหญ่เด่นขึ้น) -->
-                <div class="w-full sm:w-1/2 relative group overflow-hidden rounded-2xl border border-gray-100 bg-gray-900 shrink-0 flex items-center justify-center">
+                <!-- Thumbnail -->
+                <div class="w-full sm:w-1/2 relative group overflow-hidden rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-900 shrink-0 flex items-center justify-center">
                     <img id="x-thumbnail" class="w-full h-full min-h-[220px] max-h-[340px] object-cover group-hover:scale-105 transition-transform duration-300" src="" alt="Thumbnail">
                 </div>
 
@@ -102,12 +109,12 @@
                     <div>
                         <!-- Author Info -->
                         <div class="flex items-center gap-2 mb-3">
-                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black text-white text-xs font-bold">X</span>
-                            <h3 id="x-author" class="text-sm sm:text-base font-bold text-gray-900 truncate"></h3>
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold shrink-0">X</span>
+                            <h3 id="x-author" class="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate"></h3>
                         </div>
 
                         <!-- Tweet Content Text -->
-                        <p id="x-text" class="text-xs sm:text-sm text-gray-600 line-clamp-4 leading-relaxed mb-4 font-normal bg-gray-50/60 p-3.5 rounded-xl border border-gray-100/80"></p>
+                        <p id="x-text" class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-4 leading-relaxed mb-4 font-normal bg-gray-50/60 dark:bg-slate-800/80 p-3.5 rounded-xl border border-gray-100/80 dark:border-slate-700/60"></p>
                     </div>
 
                     <!-- Actions Container -->
@@ -119,8 +126,8 @@
         </div>
         
         <!-- Error Message -->
-        <div id="x-error" class="hidden mt-4 p-4 bg-red-50/80 backdrop-blur-md border border-red-100 text-red-600 rounded-2xl text-xs font-semibold flex items-center gap-3">
-            <div class="p-1 bg-red-100 rounded-lg shrink-0">
+        <div id="x-error" class="hidden mt-4 p-4 bg-red-50/80 dark:bg-red-950/40 backdrop-blur-md border border-red-100 dark:border-red-900/50 text-red-600 dark:text-red-400 rounded-2xl text-xs font-semibold flex items-center gap-3">
+            <div class="p-1 bg-red-100 dark:bg-red-900/50 rounded-lg shrink-0">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                 </svg>
@@ -129,6 +136,25 @@
         </div>
 
     </main>
+
+    <!-- Footer Section -->
+    <footer class="border-t border-gray-200/60 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md transition-colors duration-300 w-full">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <!-- Copyright Info -->
+            <div class="flex items-center gap-1.5 text-center sm:text-left">
+                <span>&copy; 2026 <strong class="font-semibold text-gray-700 dark:text-gray-200">My Web Tools</strong>. All rights reserved.</span>
+            </div>
+
+            <!-- GitHub Repository Link -->
+            <a href="https://github.com/Horizon25k/my-web-tools" target="_blank" rel="noopener noreferrer" 
+               class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-slate-800/80 hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white font-medium transition-all duration-200 group border border-gray-200/60 dark:border-slate-700/60 shadow-sm">
+                <svg class="w-4 h-4 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <span>GitHub Repository</span>
+            </a>
+        </div>
+    </footer>
 
     <script>
         function formatBytes(bytes) {
@@ -150,6 +176,9 @@
             resultDiv.classList.add('hidden');
 
             if (!urlInput) {
+                if (typeof showToast === 'function') {
+                    showToast('กรุณาวางลิงก์โพสต์ X ก่อนครับ', 'error');
+                }
                 errorText.textContent = 'กรุณาวางลิงก์โพสต์ X ก่อนครับ';
                 errorDiv.classList.remove('hidden');
                 return;
@@ -183,8 +212,13 @@
                 btn.href = `/api/force_download?url=${encodeURIComponent(data.video_url)}`;
                 btn.setAttribute('download', 'x-video.mp4');
                 btn.rel = 'noreferrer noopener'; 
-                btn.className = 'w-full bg-black hover:bg-gray-800 text-white font-semibold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-between text-xs sm:text-sm transition-all active:scale-[0.99] group';
-                
+                btn.className = 'w-full bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 dark:text-black text-white font-semibold py-3.5 px-4 rounded-xl shadow-md flex items-center justify-between text-xs sm:text-sm transition-all active:scale-[0.99] group';
+                btn.onclick = () => {
+                    if (typeof showToast === 'function') {
+                        showToast('เริ่มดาวน์โหลดวิดีโอ X...', 'info');
+                    }
+                };
+
                 btn.innerHTML = `
                     <span class="flex items-center gap-2">
                         <svg class="w-4 h-4 transition-transform group-hover:translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +226,7 @@
                         </svg>
                         ดาวน์โหลด MP4
                     </span>
-                    <span class="bg-white/20 text-white px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-wide">
+                    <span class="bg-white/20 dark:bg-black/20 text-white dark:text-black px-2.5 py-1 rounded-lg text-[11px] font-medium tracking-wide">
                         ${sizeText}
                     </span>
                 `;
@@ -200,14 +234,23 @@
                 btnContainer.appendChild(btn);
                 resultDiv.classList.remove('hidden');
 
+                if (typeof showToast === 'function') {
+                    showToast('ดึงข้อมูลวิดีโอ X สำเร็จ!', 'success');
+                }
+
             } catch (error) {
-                errorText.textContent = error.message;
+                const msg = error.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล';
+                errorText.textContent = msg;
                 errorDiv.classList.remove('hidden');
+                if (typeof showToast === 'function') {
+                    showToast(msg, 'error');
+                }
             } finally {
                 loadingDiv.classList.add('hidden');
             }
         }
     </script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/theme.js"></script>
 </body>
 </html>

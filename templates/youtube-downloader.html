@@ -6,14 +6,13 @@
     <meta name="referrer" content="no-referrer">
     <title>YouTube Video Downloader</title>
     
-    <!-- ระบบจัดการ Dark/Light Mode เพื่อป้องกันแสงสีขาววูบวาบ -->
+    <!-- ป้องกันแสงสีขาววูบวาบ (FOUC Mitigation - ซิงก์กับ theme.js) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark-mode');
             } else {
-                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.remove('dark-mode');
             }
         })();
     </script>
@@ -21,7 +20,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: ['class', '.dark-mode'],
         }
     </script>
     <link rel="stylesheet" href="/static/css/style.css">
@@ -30,10 +29,10 @@
         body { font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 min-h-screen antialiased selection:bg-red-500 selection:text-white transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 min-h-screen flex flex-col justify-between antialiased selection:bg-red-500 selection:text-white transition-colors duration-300">
 
     <!-- Top Navigation Bar -->
-    <header class="max-w-4xl mx-auto pt-6 px-4 sm:px-6 flex items-center justify-between">
+    <header class="max-w-4xl mx-auto pt-6 px-4 sm:px-6 flex items-center justify-between w-full">
         <a href="/" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-900 border border-gray-200/80 dark:border-slate-800 rounded-full shadow-sm hover:shadow transition-all duration-200 backdrop-blur-md group">
             <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -50,7 +49,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-10 pb-16 w-full">
         
         <!-- Hero Title -->
         <div class="text-center mb-10">
@@ -124,7 +123,7 @@
                     <!-- Actions Container -->
                     <div id="yt-download-buttons" class="mt-auto flex flex-col gap-3 pt-2">
                         
-                        <!-- Dropdown เลือกความละเอียด MP4 ตกแต่งสไตล์มินิมอล -->
+                        <!-- Dropdown เลือกความละเอียด MP4 -->
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">เลือกความละเอียดวิดีโอ (MP4):</label>
                             <select id="yt-quality-select" onchange="updateMp4DownloadLink()" class="w-full p-3.5 bg-gray-50/80 dark:bg-slate-800/90 text-gray-900 dark:text-gray-100 text-xs sm:text-sm font-semibold rounded-2xl border border-gray-200/80 dark:border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all cursor-pointer shadow-sm">
@@ -174,6 +173,25 @@
 
     </main>
 
+    <!-- Footer Section -->
+    <footer class="border-t border-gray-200/60 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md transition-colors duration-300 w-full">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <!-- Copyright Info -->
+            <div class="flex items-center gap-1.5 text-center sm:text-left">
+                <span>&copy; 2026 <strong class="font-semibold text-gray-700 dark:text-gray-200">My Web Tools</strong>. All rights reserved.</span>
+            </div>
+
+            <!-- GitHub Repository Link -->
+            <a href="https://github.com/Horizon25k/my-web-tools" target="_blank" rel="noopener noreferrer" 
+               class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-slate-800/80 hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-medium transition-all duration-200 group border border-gray-200/60 dark:border-slate-700/60 shadow-sm">
+                <svg class="w-4 h-4 fill-current transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <span>GitHub Repository</span>
+            </a>
+        </div>
+    </footer>
+
     <script>
         let currentVideoOptions = [];
         let originalVideoUrl = "";
@@ -204,6 +222,9 @@
             resultDiv.classList.add('hidden');
 
             if (!urlInput) {
+                if (typeof showToast === 'function') {
+                    showToast('กรุณาวางลิงก์ YouTube ก่อนครับ', 'error');
+                }
                 errorText.textContent = 'กรุณาวางลิงก์ YouTube ก่อนครับ';
                 errorDiv.classList.remove('hidden');
                 return;
@@ -232,7 +253,6 @@
                 const qualitySelect = document.getElementById('yt-quality-select');
                 qualitySelect.innerHTML = '';
 
-                // จัดรูปแบบข้อความใน Dropdown ให้ดูสะอาด สวยงาม และมินิมอล
                 currentVideoOptions.forEach((opt, index) => {
                     const option = document.createElement('option');
                     option.value = index;
@@ -245,10 +265,15 @@
                 // อัปเดตปุ่ม MP4
                 updateMp4DownloadLink();
 
-                // อัปเดตปุ่ม MP3 ให้แสดงขนาดไฟล์อย่างเดียว
+                // อัปเดตปุ่ม MP3
                 const mp3Btn = document.getElementById('yt-mp3-btn');
                 const mp3Badge = document.getElementById('yt-mp3-badge');
                 mp3Btn.href = `/api/download_local?url=${encodeURIComponent(originalVideoUrl)}&audio=true`;
+                mp3Btn.onclick = () => {
+                    if (typeof showToast === 'function') {
+                        showToast('เริ่มดาวน์โหลดไฟล์ MP3...', 'info');
+                    }
+                };
                 
                 if (mp3Badge) {
                     const audioSize = formatBytes(data.audio_filesize);
@@ -257,10 +282,17 @@
                 mp3Btn.classList.remove('hidden');
 
                 resultDiv.classList.remove('hidden');
+                if (typeof showToast === 'function') {
+                    showToast('ดึงข้อมูลวิดีโอ YouTube สำเร็จ!', 'success');
+                }
 
             } catch (error) {
-                errorText.textContent = error.message;
+                const msg = error.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล';
+                errorText.textContent = msg;
                 errorDiv.classList.remove('hidden');
+                if (typeof showToast === 'function') {
+                    showToast(msg, 'error');
+                }
             } finally {
                 loadingDiv.classList.add('hidden');
             }
@@ -276,25 +308,17 @@
             const selectedOpt = currentVideoOptions[select.value];
             if (selectedOpt) {
                 mp4Btn.href = `/api/download_local?url=${encodeURIComponent(originalVideoUrl)}&res=${selectedOpt.height}`;
+                mp4Btn.onclick = () => {
+                    if (typeof showToast === 'function') {
+                        showToast('เริ่มดาวน์โหลดวิดีโอ MP4...', 'info');
+                    }
+                };
                 const sizeFormatted = formatBytes(selectedOpt.filesize);
                 mp4Badge.textContent = sizeFormatted ? sizeFormatted : 'ไม่ระบุขนาด';
             }
         }
-
-        // ==========================================
-        // ระบบสลับ Dark / Light Mode
-        // ==========================================
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            const isDark = document.documentElement.classList.contains('dark');
-            if (isDark) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        });
     </script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/theme.js"></script>
 </body>
 </html>

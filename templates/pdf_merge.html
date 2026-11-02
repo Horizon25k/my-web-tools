@@ -563,6 +563,9 @@
                     finalFilename += '.pdf';
                 }
 
+                // เพิ่มแจ้งเตือนเมื่อดาวน์โหลดสำเร็จ
+                showToast('รวมไฟล์ PDF สำเร็จ! กำลังเริ่มดาวน์โหลด', 'success');
+
                 const link = document.createElement('a');
                 link.href = blobUrl;
                 link.download = finalFilename;
@@ -572,7 +575,8 @@
                 URL.revokeObjectURL(blobUrl);
 
             } catch (err) {
-                alert('เกิดข้อผิดพลาดในการรวมไฟล์ PDF: ' + err.message);
+                // เปลี่ยนจาก alert() เป็น showToast แบบ error
+                showToast('เกิดข้อผิดพลาดในการรวมไฟล์ PDF: ' + err.message, 'error');
             } finally {
                 mergeBtn.disabled = false;
                 mergeBtn.classList.remove('opacity-60', 'cursor-not-allowed');
@@ -580,6 +584,7 @@
             }
         });
     </script>
+    <script src="/static/js/toast.js"></script>
     <script src="/static/js/theme.js"></script>
 </body>
 </html>
