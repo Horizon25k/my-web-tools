@@ -54,6 +54,14 @@ def youtube_downloader_page():
 def serve_public_files(filename):
     return send_from_directory('public', filename)
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
+
 # ==========================================
 # ฟังก์ชันช่วยเตรียม Cookie (รองรับ Base64 และ Newline บน Render)
 # ==========================================
@@ -302,9 +310,9 @@ def download_local():
     finally:
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
-
-
+            
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"เปิดเซิร์ฟเวอร์แล้ว กำลังรันอยู่ที่พอร์ต {port}")
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port , debug=False)
+

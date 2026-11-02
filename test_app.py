@@ -30,6 +30,12 @@ def test_force_download_api_no_url(client):
     if response.status_code != 404:
         assert response.status_code == 400
 
+# เทสต์หน้า Error Handlers
+def test_404_page(client):
+    response = client.get('/non-existent-page-url')
+    assert response.status_code == 404
+    assert '404' in response.get_data(as_text=True)
+
 # ==================================================
 # Test Cases สำหรับ YouTube Downloader (Local VS Render)
 # ==================================================
