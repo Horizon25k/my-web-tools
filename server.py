@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 load_dotenv()
 from flask_cors import CORS
 
-app = Flask(__name__)
-CORS(app) # อนุญาตให้หน้าเว็บ HTML เรียกใช้ API ได้
+base_dir = os.path.abspath(os.path.dirname(__file__))
+template_dir = os.path.join(base_dir, 'templates')
+
+app = Flask(__name__, template_folder=template_dir)
 
 # ==========================================
 # ฟังก์ชันช่วยเช็กสภาพแวดล้อม (Localhost vs Render)
@@ -310,7 +312,7 @@ def download_local():
     finally:
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
-            
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"เปิดเซิร์ฟเวอร์แล้ว กำลังรันอยู่ที่พอร์ต {port}")
